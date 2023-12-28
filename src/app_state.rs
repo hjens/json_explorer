@@ -1,4 +1,3 @@
-use std::fmt::format;
 use ratatui::{prelude::*, widgets::*};
 use serde_json::value::Number;
 
@@ -159,6 +158,7 @@ impl AppState {
             if is_in_collapsed {
                 if item.indent == collapse_indent {
                     is_in_collapsed = false;
+                    item.visible = false;  // closing bracket
                     continue;
                 }
                 item.visible = false;
