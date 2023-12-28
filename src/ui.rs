@@ -34,7 +34,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
     }
 }
 
-fn render<B: Backend>(frame: &mut Frame<B>, app_state: &mut AppState) {
+fn render(frame: &mut Frame, app_state: &mut AppState) {
     let size = frame.size();
 
     let block = Block::default()

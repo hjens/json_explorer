@@ -83,7 +83,7 @@ impl AppState {
     pub fn new(items: Vec<JsonItem>) -> AppState {
         AppState {
             list_state: ListState::default(),
-            items: items,
+            items,
         }
     }
 
