@@ -1,16 +1,19 @@
-use ratatui::{Frame, Terminal};
-use ratatui::widgets::{Borders, BorderType, List, ListItem};
-use crate::app_state::AppState;
 use std::io;
+
 use crossterm::{
     event::{self, Event, KeyCode},
 };
+use crossterm::terminal::size;
+use ratatui::{Frame, Terminal};
 use ratatui::{
-    backend::{Backend},
-    layout::{Alignment},
+    backend::Backend,
+    layout::Alignment,
     style::{Color, Modifier, Style},
     widgets::Block,
 };
+use ratatui::widgets::{Borders, BorderType, List, ListItem};
+
+use crate::app_state::AppState;
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState) -> io::Result<()> {
     loop {
@@ -44,8 +47,8 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
         .border_type(BorderType::Rounded);
     frame.render_widget(block, size);
 
-    let list_items: Vec<ListItem> = app_state
-        .visible_items()
+    let visible_items = app_state.visible_items();
+    let list_items: Vec<ListItem> = visible_items
         .iter()
         .map(|i| ListItem::new(i.display_text()))
         .collect();

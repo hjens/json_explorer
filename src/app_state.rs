@@ -1,6 +1,8 @@
-use ratatui::widgets::ListState;
+use std::fmt::format;
+use ratatui::{prelude::*, widgets::*};
 use serde_json::value::Number;
 
+#[derive(Clone)]
 pub enum JsonValueType {
     Number(Number),
     String(String),
@@ -12,6 +14,7 @@ pub enum JsonValueType {
     Null,
 }
 
+#[derive(Clone)]
 pub struct JsonItem {
     pub name: Option<String>,
     pub indent: usize,
@@ -31,44 +34,57 @@ impl JsonItem {
         }
     }
 
-    pub fn display_text(&self) -> String {
-        let indent = " │  ".repeat(self.indent);
+
+    pub fn display_text(&self) -> Line {
+        let indent = "│  ".repeat(self.indent);
+        let indent_span = Span::styled(indent.clone(), Style::default().fg(Color::DarkGray));
         let name_str = match &self.name {
             Some(name) => format!("{}: ", name),
             None => "".to_string()
         };
+        let name_span = Span::styled(name_str.clone(), Style::default().fg(Color::Yellow));
         match &self.value {
             JsonValueType::Number(num) => {
-                format!("{} {} {}", indent, name_str, num)
+                let value_span = Span::styled(format!("{}", num), Style::default().fg(Color::Red));
+                Line::from(vec![indent_span, name_span, value_span])
             }
             JsonValueType::String(s) => {
-                format!("{} {} \"{}\"", indent, name_str, s)
+                let value_span = Span::styled(format!("\"{}\"", s), Style::default().fg(Color::Blue));
+                Line::from(vec![indent_span, name_span, value_span])
             }
             JsonValueType::Bool(b) => {
-                format!("{} {} {}", indent, name_str, b)
+                let value_span = Span::styled(format!("{}", b), Style::default().fg(Color::Green));
+                Line::from(vec![indent_span, name_span, value_span])
             }
             JsonValueType::Array => {
                 if self.collapsed {
-                    format!("{} {} [...]", indent, name_str)
+                    let brackets_span = Span::from(format!("[...]"));
+                    Line::from(vec![indent_span, name_span, brackets_span])
                 } else {
-                    format!("{} {} [", indent, name_str)
+                    let brackets_span = Span::from(format!("["));
+                    Line::from(vec![indent_span, name_span, brackets_span])
                 }
             }
             JsonValueType::ArrayEnd => {
-                format!("{} ]", indent)
+                let brackets_span = Span::from(format!("]"));
+                Line::from(vec![indent_span, brackets_span])
             }
             JsonValueType::Object => {
                 if self.collapsed {
-                    format!("{} {} {{...}}", indent, name_str)
+                    let brackets_span = Span::from(format!("{{...}}"));
+                    Line::from(vec![indent_span, name_span, brackets_span])
                 } else {
-                    format!("{} {} {{", indent, name_str)
+                    let brackets_span = Span::from(format!("{{"));
+                    Line::from(vec![indent_span, name_span, brackets_span])
                 }
             }
             JsonValueType::ObjectEnd => {
-                format!("{} }}", indent)
+                let brackets_span = Span::from(format!("}}"));
+                Line::from(vec![indent_span, brackets_span])
             }
             JsonValueType::Null => {
-                format!("{} {} null", indent, name_str)
+                let value_span = Span::styled("null", Style::default().fg(Color::Gray));
+                Line::from(vec![indent_span, name_span, value_span])
             }
         }
     }
@@ -87,10 +103,11 @@ impl AppState {
         }
     }
 
-    pub fn visible_items(&self) -> Vec<&JsonItem> {
+    pub fn visible_items(&self) -> Vec<JsonItem> {
         self.items
             .iter()
             .filter(|i| i.visible)
+            .cloned()
             .collect()
     }
 
