@@ -139,7 +139,7 @@ impl AppState {
     }
 
     pub fn toggle_collapsed(&mut self) {
-        if let Some(index) = self.list_state.selected() {
+        if let Some(index) = self.selection_index() {
             match &self.items[index].value {
                 JsonValueType::Array | JsonValueType::Object => {
                     self.items[index].collapsed = !self.items[index].collapsed;
@@ -148,6 +148,21 @@ impl AppState {
                 _ => {}
             }
         }
+    }
+
+   fn visible_indices(&self) -> Vec<usize> {
+        self.items
+            .iter()
+            .enumerate()
+            .filter(|(_index, value)| value.visible)
+            .map(|(index, _value)| index)
+            .collect()
+    }
+
+    fn selection_index(&self) -> Option<usize> {
+        self.list_state
+            .selected()
+            .map(|index| self.visible_indices()[index])
     }
 
     fn recalculate_visible(&mut self) {
