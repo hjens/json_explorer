@@ -20,16 +20,18 @@ pub struct JsonItem {
     pub value: JsonValueType,
     pub collapsed: bool,
     pub visible: bool,
+    pub breadcrumbs: String,
 }
 
 impl JsonItem {
-    pub fn new(name: Option<String>, indent: usize, value: JsonValueType) -> JsonItem {
+    pub fn new(name: Option<String>, indent: usize, value: JsonValueType, breadcrumbs: String) -> JsonItem {
         JsonItem {
             name,
             indent,
             value,
             collapsed: false,
             visible: true,
+            breadcrumbs
         }
     }
 
@@ -102,7 +104,15 @@ impl AppState {
         }
     }
 
+    pub fn breadbrumbs_text(&self) -> String {
+        match self.selection_index() {
+            Some(index) => self.items[index].breadcrumbs.clone(),
+            None => "".to_string()
+        }
+    }
+
     pub fn visible_items(&self) -> Vec<JsonItem> {
+        // TODO: cache this
         self.items
             .iter()
             .filter(|i| i.visible)

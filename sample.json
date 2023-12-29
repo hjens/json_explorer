@@ -14,6 +14,11 @@
       "vOffset": 250,
       "alignment": "center"
     },
+    "values": [
+      101,
+      102,
+      103
+    ],
     "text": {
       "data": "Click Here",
       "size": 36,

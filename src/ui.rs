@@ -3,15 +3,13 @@ use std::io;
 use crossterm::{
     event::{self, Event, KeyCode},
 };
-use crossterm::terminal::size;
 use ratatui::{Frame, Terminal};
 use ratatui::{
     backend::Backend,
-    layout::Alignment,
     style::{Color, Modifier, Style},
     widgets::Block,
 };
-use ratatui::widgets::{Borders, BorderType, List, ListItem};
+use ratatui::{prelude::*, widgets::*};
 
 use crate::app_state::AppState;
 
@@ -40,12 +38,19 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
 fn render(frame: &mut Frame, app_state: &mut AppState) {
     let size = frame.size();
 
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title("Main block with round corners")
-        .title_alignment(Alignment::Center)
-        .border_type(BorderType::Rounded);
-    frame.render_widget(block, size);
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Min(5),
+            Constraint::Length(3)
+        ])
+        .split(size);
+
+    let breadbrumbs = Paragraph::new(Text::styled(
+        app_state.breadbrumbs_text(),
+        Style::default().fg(Color::Green),
+    ))
+        .block(Block::default().borders(Borders::ALL));
 
     let visible_items = app_state.visible_items();
     let list_items: Vec<ListItem> = visible_items
@@ -61,6 +66,7 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
                 .add_modifier(Modifier::BOLD)
         );
 
-    frame.render_stateful_widget(list, size, &mut app_state.list_state);
+    frame.render_stateful_widget(list, chunks[0], &mut app_state.list_state);
+    frame.render_widget(breadbrumbs, chunks[1]);
 }
 
