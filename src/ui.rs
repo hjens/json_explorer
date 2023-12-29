@@ -59,7 +59,7 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
         .collect();
 
     let list = List::new(list_items)
-        .block(Block::default().borders(Borders::ALL).title("Json file"))
+        .block(Block::default().borders(Borders::TOP).title("Json file"))
         .highlight_style(
             Style::default()
                 .bg(Color::LightMagenta)

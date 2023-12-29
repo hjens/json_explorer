@@ -1,3 +1,6 @@
+use std::io::BufRead;
+use std::iter::zip;
+
 use ratatui::{prelude::*, widgets::*};
 use serde_json::value::Number;
 
@@ -21,6 +24,7 @@ pub struct JsonItem {
     pub collapsed: bool,
     pub visible: bool,
     pub breadcrumbs: String,
+    pub selection_level: Option<usize>,
 }
 
 impl JsonItem {
@@ -31,63 +35,79 @@ impl JsonItem {
             value,
             collapsed: false,
             visible: true,
-            breadcrumbs
+            breadcrumbs,
+            selection_level: None,
         }
+    }
+
+    fn indent_spans(&self) -> Vec<Span> {
+        let mut output = vec![];
+        for i in 0..self.indent {
+            if i < 1 {
+                output.push(Span::raw("   "));
+            }
+            else if Some(i) == self.selection_level {
+                output.push(Span::styled("│   ", Style::default().fg(Color::Cyan)));
+            } else {
+                output.push(Span::styled("│   ", Style::default().fg(Color::DarkGray)));
+            }
+        }
+        output
     }
 
 
     pub fn display_text(&self) -> Line {
-        let indent = "│  ".repeat(self.indent);
-        let indent_span = Span::styled(indent.clone(), Style::default().fg(Color::DarkGray));
+        let indents = self.indent_spans();
         let name_str = match &self.name {
             Some(name) => format!("{}: ", name),
             None => "".to_string()
         };
         let name_span = Span::styled(name_str.clone(), Style::default().fg(Color::Yellow));
-        match &self.value {
+        let name_value = match &self.value {
             JsonValueType::Number(num) => {
                 let value_span = Span::styled(format!("{}", num), Style::default().fg(Color::Red));
-                Line::from(vec![indent_span, name_span, value_span])
+                vec![name_span, value_span]
             }
             JsonValueType::String(s) => {
                 let value_span = Span::styled(format!("\"{}\"", s), Style::default().fg(Color::Blue));
-                Line::from(vec![indent_span, name_span, value_span])
+                vec![name_span, value_span]
             }
             JsonValueType::Bool(b) => {
                 let value_span = Span::styled(format!("{}", b), Style::default().fg(Color::Green));
-                Line::from(vec![indent_span, name_span, value_span])
+                vec![name_span, value_span]
             }
             JsonValueType::Array => {
                 if self.collapsed {
                     let brackets_span = Span::from(format!("[...]"));
-                    Line::from(vec![indent_span, name_span, brackets_span])
+                    vec![name_span, brackets_span]
                 } else {
                     let brackets_span = Span::from(format!("["));
-                    Line::from(vec![indent_span, name_span, brackets_span])
+                    vec![name_span, brackets_span]
                 }
             }
             JsonValueType::ArrayEnd => {
                 let brackets_span = Span::from(format!("]"));
-                Line::from(vec![indent_span, brackets_span])
+                vec![brackets_span]
             }
             JsonValueType::Object => {
                 if self.collapsed {
                     let brackets_span = Span::from(format!("{{...}}"));
-                    Line::from(vec![indent_span, name_span, brackets_span])
+                    vec![name_span, brackets_span]
                 } else {
                     let brackets_span = Span::from(format!("{{"));
-                    Line::from(vec![indent_span, name_span, brackets_span])
+                    vec![name_span, brackets_span]
                 }
             }
             JsonValueType::ObjectEnd => {
                 let brackets_span = Span::from(format!("}}"));
-                Line::from(vec![indent_span, brackets_span])
+                vec![brackets_span]
             }
             JsonValueType::Null => {
                 let value_span = Span::styled("null", Style::default().fg(Color::Gray));
-                Line::from(vec![indent_span, name_span, value_span])
+                vec![name_span, value_span]
             }
-        }
+        };
+        Line::from([indents, name_value].concat())
     }
 }
 
@@ -130,6 +150,7 @@ impl AppState {
             }
         };
         self.list_state.select(Some(new_index));
+        self.recalculate_selection_level();
     }
 
     pub fn select_previous(&mut self) {
@@ -146,6 +167,7 @@ impl AppState {
             }
         };
         self.list_state.select(Some(new_index));
+        self.recalculate_selection_level();
     }
 
     pub fn toggle_collapsed(&mut self) {
@@ -160,7 +182,7 @@ impl AppState {
         }
     }
 
-   fn visible_indices(&self) -> Vec<usize> {
+    fn visible_indices(&self) -> Vec<usize> {
         self.items
             .iter()
             .enumerate()
@@ -190,6 +212,39 @@ impl AppState {
             } else if item.collapsed {
                 is_in_collapsed = true;
                 collapse_indent = item.indent;
+            }
+        }
+    }
+
+    fn recalculate_selection_level(&mut self) {
+        if let Some(index) = self.selection_index() {
+            // For non-containers, strip away the last component of the breadcrumbs
+            let selection_breadcrumbs = match self.items[index].value {
+                JsonValueType::Number(_) | JsonValueType::Bool(_) | JsonValueType::String(_) | JsonValueType::Null => {
+                    match self.items[index].breadcrumbs.rsplit_once(" ▶ ") {
+                        Some((val, _)) => val.to_string(),
+                        None => "".to_string()
+                    }
+                }
+                _ => self.items[index].breadcrumbs.clone()
+            };
+            let mut selection_level = 0;
+            // Loop through all items and calculate selection level
+            for item in self.items.iter_mut() {
+                if item.breadcrumbs.starts_with(&selection_breadcrumbs) {
+                    selection_level = 0;
+                    // How many components of the breadcrumbs match?
+                    for (p1, p2) in zip(selection_breadcrumbs.split(" ▶ "), item.breadcrumbs.split(" ▶ ")) {
+                        if p1 == p2 {
+                            selection_level += 1;
+                        } else {
+                            break;
+                        }
+                    }
+                    item.selection_level = Some(selection_level);
+                } else {
+                    item.selection_level = None;
+                }
             }
         }
     }
