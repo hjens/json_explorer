@@ -48,6 +48,9 @@ pub fn parse_json_file() -> Result<Vec<JsonItem>> {
 
     let mut json_vec = Vec::new();
     parse_json(&root_value, &mut json_vec, None, 0, "".to_string());
+    for (index, item) in json_vec.iter_mut().enumerate() {
+        item.line_number = index;
+    }
     Ok(json_vec)
 }
 

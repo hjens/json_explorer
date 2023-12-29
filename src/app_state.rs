@@ -21,6 +21,7 @@ pub struct JsonItem {
     pub name: Option<String>,
     pub indent: usize,
     pub value: JsonValueType,
+    pub line_number: usize,
     pub collapsed: bool,
     pub visible: bool,
     pub breadcrumbs: String,
@@ -33,6 +34,7 @@ impl JsonItem {
             name,
             indent,
             value,
+            line_number: 0,
             collapsed: false,
             visible: true,
             breadcrumbs,
@@ -57,6 +59,7 @@ impl JsonItem {
 
 
     pub fn display_text(&self) -> Line {
+        let line_number = Span::styled(format!("{:4} ", self.line_number), Style::default().fg(Color::DarkGray));
         let indents = self.indent_spans();
         let name_str = match &self.name {
             Some(name) => format!("{}: ", name),
@@ -107,7 +110,7 @@ impl JsonItem {
                 vec![name_span, value_span]
             }
         };
-        Line::from([indents, name_value].concat())
+        Line::from([vec![line_number], indents, name_value].concat())
     }
 }
 
