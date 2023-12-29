@@ -1,4 +1,3 @@
-use std::io::BufRead;
 use std::iter::zip;
 
 use ratatui::{prelude::*, widgets::*};
@@ -47,8 +46,7 @@ impl JsonItem {
         for i in 0..self.indent {
             if i < 1 {
                 output.push(Span::raw("   "));
-            }
-            else if Some(i) == self.selection_level {
+            } else if Some(i) == self.selection_level {
                 output.push(Span::styled("│   ", Style::default().fg(Color::Cyan)));
             } else {
                 output.push(Span::styled("│   ", Style::default().fg(Color::DarkGray)));
@@ -124,6 +122,13 @@ impl AppState {
         AppState {
             list_state: ListState::default(),
             items,
+        }
+    }
+
+    pub fn scroll_position(&self) -> usize {
+        match self.list_state.selected() {
+            Some(index) => index,
+            None => 0
         }
     }
 
@@ -231,7 +236,7 @@ impl AppState {
                 }
                 _ => self.items[index].breadcrumbs.clone()
             };
-            let mut selection_level = 0;
+            let mut selection_level: usize;
             // Loop through all items and calculate selection level
             for item in self.items.iter_mut() {
                 if item.breadcrumbs.starts_with(&selection_breadcrumbs) {

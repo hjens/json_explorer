@@ -62,11 +62,26 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
         .block(Block::default().borders(Borders::TOP).title("Json file"))
         .highlight_style(
             Style::default()
-                .bg(Color::LightMagenta)
+                .bg(Color::Gray)
                 .add_modifier(Modifier::BOLD)
         );
 
+    let scrollbar = Scrollbar::default()
+        .orientation(ScrollbarOrientation::VerticalRight)
+        .begin_symbol(Some("↑"))
+        .end_symbol(Some("↓"));
+    let mut scrollbar_state = ScrollbarState::new(visible_items.iter().len()).position(app_state.scroll_position());
+
+
     frame.render_stateful_widget(list, chunks[0], &mut app_state.list_state);
+    frame.render_stateful_widget(
+        scrollbar,
+        chunks[0].inner(&Margin {
+            vertical: 1,
+            horizontal: 0,
+        }),
+        &mut scrollbar_state,
+    );
     frame.render_widget(breadbrumbs, chunks[1]);
 }
 
