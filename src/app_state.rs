@@ -161,27 +161,27 @@ impl AppState {
             .collect()
     }
 
-    pub fn select_next(&mut self) {
+    pub fn select_next(&mut self, step: usize) {
         let new_index = match self.list_state.selected() {
             None => {
                 0
             }
             Some(index) => {
-                min((index + 1), self.visible_items().len() - 1)
+                min((index + step), self.visible_items().len() - 1)
             }
         };
         self.list_state.select(Some(new_index));
         self.recalculate_selection_level();
     }
 
-    pub fn select_previous(&mut self) {
+    pub fn select_previous(&mut self, step: usize) {
         let new_index = match self.list_state.selected() {
             None => {
                 0
             }
             Some(index) => {
-                if index > 1 {
-                    index - 1
+                if index > step {
+                    index - step
                 } else {
                     0
                 }

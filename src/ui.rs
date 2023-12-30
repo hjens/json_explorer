@@ -21,13 +21,27 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
             match key.code {
                 KeyCode::Char('q') => return Ok(()),
                 KeyCode::Char('j') => {
-                    app_state.select_next();
+                    app_state.select_next(1);
                 }
                 KeyCode::Char('k') => {
-                    app_state.select_previous();
+                    app_state.select_previous(1);
                 }
                 KeyCode::Char('c') => {
                     app_state.toggle_collapsed();
+                }
+                KeyCode::Char(' ') => {
+                    if let Ok(size) = terminal.size() {
+                        if size.height > 5 {
+                            app_state.select_next((size.height - 5) as usize);
+                        }
+                    }
+                }
+                KeyCode::Backspace => {
+                    if let Ok(size) = terminal.size() {
+                        if size.height > 5 {
+                            app_state.select_previous((size.height - 5) as usize);
+                        }
+                    }
                 }
                 _ => {}
             }
