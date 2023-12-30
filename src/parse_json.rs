@@ -42,8 +42,8 @@ fn make_breadcrumbs(root: &str, new: &str) -> String {
     }
 }
 
-pub fn parse_json_file() -> Result<Vec<JsonItem>> {
-    let text = fs::read_to_string("/Users/hannes/Documents/PycharmProjects/json_explorer/sample.json").expect("File must exist");
+pub fn parse_json_file(filename: &str) -> Result<Vec<JsonItem>> {
+    let text = fs::read_to_string(filename).expect("File must exist");
     let root_value: Value = serde_json::from_str(&text)?;
 
     let mut json_vec = Vec::new();
