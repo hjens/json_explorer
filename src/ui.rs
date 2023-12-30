@@ -29,6 +29,12 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
                 KeyCode::Char('c') => {
                     app_state.toggle_collapsed();
                 }
+                KeyCode::Char('g') => {
+                    app_state.select_top();
+                }
+                KeyCode::Char('G') => {
+                    app_state.select_bottom();
+                }
                 KeyCode::Char(' ') => {
                     if let Ok(size) = terminal.size() {
                         if size.height > 5 {

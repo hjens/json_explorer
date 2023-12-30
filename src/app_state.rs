@@ -191,6 +191,16 @@ impl AppState {
         self.recalculate_selection_level();
     }
 
+    pub fn select_top(&mut self) {
+        self.list_state.select(Some(0));
+        self.recalculate_selection_level();
+    }
+
+    pub fn select_bottom(&mut self) {
+        self.list_state.select(Some(self.visible_items().len() - 1));
+        self.recalculate_selection_level();
+    }
+
     pub fn toggle_collapsed(&mut self) {
         if let Some(index) = self.selection_index() {
             match &self.items[index].value {
