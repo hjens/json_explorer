@@ -53,9 +53,12 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
         .block(Block::default().borders(Borders::ALL));
 
     let visible_items = app_state.visible_items();
+    let top_index = app_state.top_index();
+    let bottom_index = app_state.bottom_index(chunks[0].height as usize);
     let list_items: Vec<ListItem> = visible_items
         .iter()
-        .map(|i| ListItem::new(i.display_text()))
+        .enumerate()
+        .map(|(index, item)| ListItem::new(item.display_text(top_index, bottom_index, index)))
         .collect();
 
     let list = List::new(list_items)

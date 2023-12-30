@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::iter::zip;
 
 use ratatui::{prelude::*, widgets::*};
@@ -56,7 +57,11 @@ impl JsonItem {
     }
 
 
-    pub fn display_text(&self) -> Line {
+    pub fn display_text(&self, top_index: usize, bottom_index: usize, item_index: usize) -> Line {
+        if item_index < top_index || item_index > bottom_index {
+            return Line::from("outside");
+        }
+
         let line_number = Span::styled(format!("{:4} ", self.line_number), Style::default().fg(Color::DarkGray));
         let indents = self.indent_spans();
         let name_str = match &self.name {
@@ -125,6 +130,14 @@ impl AppState {
         }
     }
 
+    pub fn top_index(&self) -> usize {
+        self.list_state.offset()
+    }
+
+    pub fn bottom_index(&self, frame_height: usize) -> usize {
+        min(self.top_index() + frame_height, self.visible_items().len())
+    }
+
     pub fn scroll_position(&self) -> usize {
         match self.list_state.selected() {
             Some(index) => index,
@@ -154,7 +167,7 @@ impl AppState {
                 0
             }
             Some(index) => {
-                (index + 1) % self.visible_items().len()
+                min((index + 1), self.visible_items().len() - 1)
             }
         };
         self.list_state.select(Some(new_index));
@@ -167,10 +180,10 @@ impl AppState {
                 0
             }
             Some(index) => {
-                if index == 0 {
-                    self.visible_items().len() - 1
-                } else {
+                if index > 1 {
                     index - 1
+                } else {
+                    0
                 }
             }
         };
@@ -199,7 +212,7 @@ impl AppState {
             .collect()
     }
 
-    fn selection_index(&self) -> Option<usize> {
+    pub fn selection_index(&self) -> Option<usize> {
         self.list_state
             .selected()
             .map(|index| self.visible_indices()[index])
