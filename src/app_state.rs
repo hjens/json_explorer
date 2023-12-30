@@ -120,13 +120,15 @@ impl JsonItem {
 pub struct AppState {
     pub list_state: ListState,
     pub items: Vec<JsonItem>,
+    pub filename: String,
 }
 
 impl AppState {
-    pub fn new(items: Vec<JsonItem>) -> AppState {
+    pub fn new(items: Vec<JsonItem>, filename: String) -> AppState {
         AppState {
             list_state: ListState::default(),
             items,
+            filename,
         }
     }
 
