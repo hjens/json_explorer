@@ -57,9 +57,9 @@ impl JsonItem {
     }
 
 
-    pub fn display_text(&self, top_index: usize, bottom_index: usize, item_index: usize) -> Line {
-        if item_index < top_index || item_index > bottom_index {
-            return Line::from("outside");
+    pub fn display_text(&self, item_index: i32, selection_index: i32, terminal_height: i32) -> Line {
+        if (item_index - selection_index).abs() > terminal_height {
+            return Line::from("-");
         }
 
         let line_number = Span::styled(format!("{:4} ", self.line_number), Style::default().fg(Color::DarkGray));
