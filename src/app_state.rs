@@ -59,6 +59,7 @@ impl JsonItem {
 
     pub fn display_text(&self, item_index: i32, selection_index: i32, terminal_height: i32) -> Line {
         if (item_index - selection_index).abs() > terminal_height {
+            // TODO: fixa när vissa är kollapsade
             return Line::from("-");
         }
 
@@ -84,28 +85,28 @@ impl JsonItem {
             }
             JsonValueType::Array => {
                 if self.collapsed {
-                    let brackets_span = Span::from(format!("[...]"));
+                    let brackets_span = Span::from("[...]");
                     vec![name_span, brackets_span]
                 } else {
-                    let brackets_span = Span::from(format!("["));
+                    let brackets_span = Span::from("[");
                     vec![name_span, brackets_span]
                 }
             }
             JsonValueType::ArrayEnd => {
-                let brackets_span = Span::from(format!("]"));
+                let brackets_span = Span::from("]");
                 vec![brackets_span]
             }
             JsonValueType::Object => {
                 if self.collapsed {
-                    let brackets_span = Span::from(format!("{{...}}"));
+                    let brackets_span = Span::from("{...}");
                     vec![name_span, brackets_span]
                 } else {
-                    let brackets_span = Span::from(format!("{{"));
+                    let brackets_span = Span::from("{");
                     vec![name_span, brackets_span]
                 }
             }
             JsonValueType::ObjectEnd => {
-                let brackets_span = Span::from(format!("}}"));
+                let brackets_span = Span::from("}");
                 vec![brackets_span]
             }
             JsonValueType::Null => {
@@ -132,19 +133,8 @@ impl AppState {
         }
     }
 
-    pub fn top_index(&self) -> usize {
-        self.list_state.offset()
-    }
-
-    pub fn bottom_index(&self, frame_height: usize) -> usize {
-        min(self.top_index() + frame_height, self.visible_items().len())
-    }
-
     pub fn scroll_position(&self) -> usize {
-        match self.list_state.selected() {
-            Some(index) => index,
-            None => 0
-        }
+        self.list_state.selected().unwrap_or(0)
     }
 
     pub fn breadbrumbs_text(&self) -> String {
@@ -169,7 +159,7 @@ impl AppState {
                 0
             }
             Some(index) => {
-                min((index + step), self.visible_items().len() - 1)
+                min(index + step, self.visible_items().len() - 1)
             }
         };
         self.list_state.select(Some(new_index));
