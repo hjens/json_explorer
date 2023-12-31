@@ -73,7 +73,7 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
         .block(Block::default().borders(Borders::ALL));
 
     let visible_items = app_state.visible_items();
-    let selection_index = app_state.selection_index().unwrap_or(0) as i32;
+    let selection_index = app_state.list_state.selected().unwrap_or(0) as i32;
     let list_items: Vec<ListItem> = visible_items
         .iter()
         .enumerate()
