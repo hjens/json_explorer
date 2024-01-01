@@ -1,5 +1,3 @@
-use std::fs;
-
 use serde_json::{Result, Value};
 
 use crate::app_state::{JsonItem, JsonValueType};
@@ -42,9 +40,8 @@ fn make_breadcrumbs(root: &str, new: &str) -> String {
     }
 }
 
-pub fn parse_json_file(filename: &str) -> Result<Vec<JsonItem>> {
-    let text = fs::read_to_string(filename).expect("File must exist");
-    let root_value: Value = serde_json::from_str(&text)?;
+pub fn parse_json_string(json_string: &str) -> Result<Vec<JsonItem>> {
+    let root_value: Value = serde_json::from_str(&json_string)?;
 
     let mut json_vec = Vec::new();
     parse_json(&root_value, &mut json_vec, None, 0, "".to_string());
