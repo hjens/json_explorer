@@ -33,12 +33,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     let json_values = parse_json::parse_json_string(&json_text.unwrap()).expect("Could not parse json.");
 
-    println!("Creating app state");
     let mut app_state = AppState::new(json_values, "todo".to_string());
-    println!("Creating terminal");
     let mut terminal: Terminal<CrosstermBackend<Stdout>> = create_terminal();
 
-    println!("Running app");
     let res = ui::run_app(&mut terminal, &mut app_state);
 
     destroy_terminal(&mut terminal);

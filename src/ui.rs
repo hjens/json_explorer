@@ -35,6 +35,15 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
                 KeyCode::Char('G') => {
                     app_state.select_bottom();
                 }
+                KeyCode::Char('H') => {
+                    app_state.select_top_of_screen();
+                }
+                KeyCode::Char('M') => {
+                    app_state.select_middle_of_screen();
+                }
+                KeyCode::Char('L') => {
+                    app_state.select_bottom_of_screen();
+                }
                 KeyCode::Char(' ') => {
                     if let Ok(size) = terminal.size() {
                         if size.height > 5 {
@@ -65,6 +74,8 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
             Constraint::Length(3)
         ])
         .split(size);
+
+    app_state.list_height = chunks[0].height;
 
     let breadbrumbs = Paragraph::new(Text::styled(
         app_state.breadbrumbs_text(),

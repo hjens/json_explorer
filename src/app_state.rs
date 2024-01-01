@@ -122,6 +122,7 @@ pub struct AppState {
     pub list_state: ListState,
     pub items: Vec<JsonItem>,
     pub filename: String,
+    pub list_height: u16,
 }
 
 impl AppState {
@@ -130,6 +131,7 @@ impl AppState {
             list_state: ListState::default(),
             items,
             filename,
+            list_height: 0
         }
     }
 
@@ -190,6 +192,28 @@ impl AppState {
 
     pub fn select_bottom(&mut self) {
         self.list_state.select(Some(self.visible_items().len() - 1));
+        self.recalculate_selection_level();
+    }
+
+    pub fn select_top_of_screen(&mut self) {
+        self.list_state.select(Some(self.list_state.offset()));
+        self.recalculate_selection_level();
+    }
+
+    pub fn select_middle_of_screen(&mut self) {
+        let top = self.list_state.offset() as u16;
+        let num_items = self.visible_items().len() as u16;
+        let bottom = min(top + num_items - 1, top + self.list_height - 2);
+        let index = (top + bottom) / 2;
+        self.list_state.select(Some((index) as usize));
+        self.recalculate_selection_level();
+    }
+
+    pub fn select_bottom_of_screen(&mut self) {
+        let top = self.list_state.offset() as u16;
+        let num_items = self.visible_items().len() as u16;
+        let index = min(top + num_items - 1, top + self.list_height - 2);
+        self.list_state.select(Some(index as usize));
         self.recalculate_selection_level();
     }
 
