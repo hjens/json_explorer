@@ -148,8 +148,8 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
     let bottom_layout = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Percentage(50),
-            Constraint::Percentage(50),
+            Constraint::Percentage(70),
+            Constraint::Percentage(30),
         ])
         .split(bottom_chunk);
 
