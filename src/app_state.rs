@@ -189,7 +189,6 @@ impl AppState {
     }
 
     pub fn visible_items(&self) -> Vec<JsonItem> {
-        // TODO: cache this
         self.items
             .iter()
             .filter(|i| i.visible)
@@ -271,6 +270,13 @@ impl AppState {
         }
     }
 
+    pub fn uncollapse_all(&mut self) {
+        for item in self.items.iter_mut() {
+            item.collapsed = false;
+        }
+        self.recalculate_visible();
+    }
+
     fn visible_indices(&self) -> Vec<usize> {
         self.items
             .iter()
@@ -339,12 +345,13 @@ impl AppState {
     }
 
     pub fn start_searching(&mut self) {
-        self.search_state = SearchState::Searching;
+        self.uncollapse_all();
+        self.search_state = Searching;
         self.update_search_results();
     }
 
     pub fn cancel_searching(&mut self) {
-        self.search_state = SearchState::NotSearching;
+        self.search_state = NotSearching;
         self.update_search_results();
     }
     pub fn finish_searching(&mut self) {
