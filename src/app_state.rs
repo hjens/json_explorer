@@ -179,6 +179,26 @@ impl AppState {
         app_state
     }
 
+    pub fn status_text(&self) -> String {
+        match self.search_state {
+            Searching => {
+                let num_results = self.search_results().len();
+                format!("{} results", num_results)
+            }
+            BrowsingSearch(Some(index)) => {
+                let num_results = self.search_results().len();
+                format!("Result {} of {}", index, num_results)
+            }
+            _ => {
+                let values: Vec<&JsonItem> = self.items
+                    .iter()
+                    .filter(|i| i.value != JsonValueType::ObjectEnd && i.value != JsonValueType::ArrayEnd)
+                    .collect();
+                format!("{} values in file", values.len())
+            }
+        }
+    }
+
     pub fn scroll_position(&self) -> usize {
         self.list_state.selected().unwrap_or(0)
     }

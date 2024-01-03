@@ -44,6 +44,9 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
                         KeyCode::Esc => {
                             app_state.cancel_searching();
                         }
+                        KeyCode::Char('/') => {
+                            app_state.start_searching();
+                        }
                         KeyCode::Char('q') => return Ok(()),
                         _ => {}
                     }
@@ -107,10 +110,11 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
 }
 
 fn render(frame: &mut Frame, app_state: &mut AppState) {
+    // Layout
     let size = frame.size();
 
     let chunks = match app_state.search_state {
-        SearchState::Searching => {
+        SearchState::Searching | SearchState::BrowsingSearch(_) => {
             Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
@@ -132,16 +136,38 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
     };
     let list_chunk = match app_state.search_state {
         SearchState::Searching => chunks[1],
+        SearchState::BrowsingSearch(_) => chunks[1],
         _ => chunks[0]
     };
     app_state.list_height = list_chunk.height;
+    let bottom_chunk = match app_state.search_state {
+        SearchState::Searching | SearchState::BrowsingSearch(_) => chunks[2],
+        _ => chunks[1]
+    };
 
+    let bottom_layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(50),
+            Constraint::Percentage(50),
+        ])
+        .split(bottom_chunk);
+
+    // Breadcrumbs
     let breadbrumbs = Paragraph::new(Text::styled(
         app_state.breadbrumbs_text(),
         Style::default().fg(Color::Green),
     ))
         .block(Block::default().borders(Borders::ALL));
 
+    // Status area
+    let status_area = Paragraph::new(Text::styled(
+        app_state.status_text(),
+        Style::default().fg(Color::LightYellow),
+    ))
+        .block(Block::default().borders(Borders::ALL));
+
+    // Main view
     let visible_items = app_state.visible_items();
     let selection_index = app_state.list_state.selected().unwrap_or(0) as i32;
     let list_items: Vec<ListItem> = visible_items
@@ -162,21 +188,19 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
                 .add_modifier(Modifier::BOLD)
         );
 
+    // Scrollbar
     let scrollbar = Scrollbar::default()
         .orientation(ScrollbarOrientation::VerticalRight)
         .begin_symbol(Some("↑"))
         .end_symbol(Some("↓"));
     let mut scrollbar_state = ScrollbarState::new(visible_items.iter().len()).position(app_state.scroll_position());
 
+    // Search
     let search = Paragraph::new(app_state.search_text().to_string().clone())
         .style(Style::default())
         .block(Block::default().borders(Borders::ALL).title("Search:"));
 
-    let breadcrumbs_chunk = match app_state.search_state {
-        SearchState::Searching => chunks[2],
-        _ => chunks[1]
-    };
-
+    // Render
     frame.render_stateful_widget(list, list_chunk, &mut app_state.list_state);
     frame.render_stateful_widget(
         scrollbar,
@@ -186,9 +210,11 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
         }),
         &mut scrollbar_state,
     );
-    frame.render_widget(breadbrumbs, breadcrumbs_chunk);
-    if app_state.search_state == SearchState::Searching {
-        frame.render_widget(search, chunks[0]);
+    frame.render_widget(breadbrumbs, bottom_layout[0]);
+    frame.render_widget(status_area, bottom_layout[1]);
+    match app_state.search_state {
+        SearchState::Searching | SearchState::BrowsingSearch(_) => { frame.render_widget(search, chunks[0]) }
+        _ => {}
     }
 
     // Place cursor
@@ -199,7 +225,7 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
         SearchState::Searching => {
             frame.set_cursor(
                 ((app_state.search_input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                cursor_y as u16
+                cursor_y as u16,
             )
         }
         _ => {}  // hide the cursor
