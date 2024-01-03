@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     let json_values = parse_json::parse_json_string(&json_text.unwrap()).expect("Could not parse json.");
 
-    let mut app_state = AppState::new(json_values, "todo".to_string());
+    let mut app_state = AppState::new(json_values, "".to_string());
     let mut terminal: Terminal<CrosstermBackend<Stdout>> = create_terminal();
 
     let res = ui::run_app(&mut terminal, &mut app_state);
@@ -54,13 +54,9 @@ fn read_from_stdin() -> Result<String, Box<dyn Error>> {
 }
 
 fn create_terminal() -> Terminal<CrosstermBackend<Stdout>> {
-    println!("1");
     enable_raw_mode().expect("Unable to enable raw mode");
-    println!("2");
     let mut stdout = io::stdout();
-    println!("3");
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture).expect("Unable to set up stdout");
-    println!("4");
     let backend = CrosstermBackend::new(stdout);
     Terminal::new(backend).expect("Unable to set up terminal")
 }

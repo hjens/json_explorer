@@ -1,8 +1,12 @@
 use std::cmp::min;
 use std::iter::zip;
 
+use crossterm::event::Event;
 use ratatui::{prelude::*, widgets::*};
 use serde_json::value::Number;
+use tui_input::backend::crossterm::EventHandler;
+use tui_input::Input;
+use crate::app_state::SearchState::{BrowsingSearch, NotSearching, Searching};
 
 #[derive(Clone)]
 pub enum JsonValueType {
@@ -26,6 +30,8 @@ pub struct JsonItem {
     pub visible: bool,
     pub breadcrumbs: String,
     pub selection_level: Option<usize>,
+    pub name_is_search_result: bool,
+    pub value_is_search_result: bool,
 }
 
 impl JsonItem {
@@ -39,6 +45,8 @@ impl JsonItem {
             visible: true,
             breadcrumbs,
             selection_level: None,
+            name_is_search_result: false,
+            value_is_search_result: false,
         }
     }
 
@@ -59,7 +67,6 @@ impl JsonItem {
 
     pub fn display_text(&self, item_index: i32, selection_index: i32, terminal_height: i32) -> Line {
         if (item_index - selection_index).abs() > terminal_height {
-            // TODO: fixa när vissa är kollapsade
             return Line::from("-");
         }
 
@@ -69,18 +76,27 @@ impl JsonItem {
             Some(name) => format!("{}: ", name),
             None => "".to_string()
         };
-        let name_span = Span::styled(name_str.clone(), Style::default().fg(Color::Yellow));
+        let name_span = Span::styled(name_str.clone(), Style::default().fg(Color::Yellow).bg(
+            match self.name_is_search_result {
+                true => Color::LightCyan,
+                false => Color::default()
+            }
+        ));
+        let value_bg = match self.value_is_search_result {
+            true => Color::LightCyan,
+            false => Color::default()
+        };
         let name_value = match &self.value {
             JsonValueType::Number(num) => {
-                let value_span = Span::styled(format!("{}", num), Style::default().fg(Color::Red));
+                let value_span = Span::styled(format!("{}", num), Style::default().fg(Color::Red).bg(value_bg));
                 vec![name_span, value_span]
             }
             JsonValueType::String(s) => {
-                let value_span = Span::styled(format!("\"{}\"", s), Style::default().fg(Color::Blue));
+                let value_span = Span::styled(format!("\"{}\"", s), Style::default().fg(Color::Blue).bg(value_bg));
                 vec![name_span, value_span]
             }
             JsonValueType::Bool(b) => {
-                let value_span = Span::styled(format!("{}", b), Style::default().fg(Color::Green));
+                let value_span = Span::styled(format!("{}", b), Style::default().fg(Color::Green).bg(value_bg));
                 vec![name_span, value_span]
             }
             JsonValueType::Array => {
@@ -116,6 +132,28 @@ impl JsonItem {
         };
         Line::from([vec![line_number], indents, name_value].concat())
     }
+
+    pub fn update_is_search_result(&mut self, search_string: &str, is_searching: bool) {
+        if search_string.is_empty() || !is_searching {
+            self.value_is_search_result = false;
+            self.name_is_search_result = false;
+        } else {
+            self.name_is_search_result = self.name.clone().unwrap_or("".to_string()).contains(search_string);
+            self.value_is_search_result = match &self.value {
+                JsonValueType::Number(n) => n.to_string().contains(search_string),
+                JsonValueType::String(s) => s.contains(search_string),
+                JsonValueType::Bool(b) => b.to_string().contains(search_string),
+                _ => false
+            };
+        }
+    }
+}
+
+#[derive(PartialEq)]
+pub enum SearchState {
+    NotSearching,
+    Searching,
+    BrowsingSearch(Option<usize>),
 }
 
 pub struct AppState {
@@ -123,6 +161,8 @@ pub struct AppState {
     pub items: Vec<JsonItem>,
     pub filename: String,
     pub list_height: u16,
+    pub search_state: SearchState,
+    pub search_input: Input,
 }
 
 impl AppState {
@@ -131,7 +171,9 @@ impl AppState {
             list_state: ListState::default(),
             items,
             filename,
-            list_height: 0
+            list_height: 0,
+            search_state: SearchState::NotSearching,
+            search_input: Input::new("".to_string()),
         }
     }
 
@@ -293,6 +335,83 @@ impl AppState {
                     item.selection_level = None;
                 }
             }
+        }
+    }
+
+    pub fn start_searching(&mut self) {
+        self.search_state = SearchState::Searching;
+        self.update_search_results();
+    }
+
+    pub fn cancel_searching(&mut self) {
+        self.search_state = SearchState::NotSearching;
+        self.update_search_results();
+    }
+    pub fn finish_searching(&mut self) {
+        self.search_state = match self.search_results().first() {
+            Some(_) => BrowsingSearch(Some(0)),
+            None => NotSearching
+        };
+    }
+
+    fn search_results(&self) -> Vec<usize> {
+        self.items
+            .iter()
+            .enumerate()
+            .filter(|(_index, item)| item.name_is_search_result || item.value_is_search_result)
+            .map(|(index, _item)| index)
+            .collect()
+    }
+
+    pub fn update_search(&mut self, event: &Event) {
+        self.search_input.handle_event(event);
+        self.update_search_results();
+    }
+
+    fn update_search_results(&mut self) {
+        for item in self.items.iter_mut() {
+            item.update_is_search_result(self.search_input.value(), self.search_state != NotSearching);
+        }
+        match self.search_state {
+            Searching => {
+                let search_results = self.search_results();
+                if !search_results.is_empty() {
+                    let new_index = 0;
+                    self.list_state.select(Some(search_results[new_index]));
+                    self.recalculate_selection_level();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    pub fn search_text(&self) -> &str {
+        self.search_input.value()
+    }
+
+    pub fn next_search_result(&mut self) {
+        match self.search_state {
+            BrowsingSearch(Some(index)) => {
+                let search_results = self.search_results();
+                let new_index = (index + 1) % search_results.len();
+                self.list_state.select(Some(search_results[new_index]));
+                self.recalculate_selection_level();
+                self.search_state = BrowsingSearch(Some(new_index));
+            }
+            _ => {}
+        }
+    }
+
+    pub fn previous_search_result(&mut self) {
+        match self.search_state {
+            BrowsingSearch(Some(index)) => {
+                let search_results = self.search_results();
+                let new_index = match index {0 => search_results.len() - 1, _=> index - 1};
+                self.list_state.select(Some(search_results[new_index]));
+                self.recalculate_selection_level();
+                self.search_state = BrowsingSearch(Some(new_index));
+            }
+            _ => {}
         }
     }
 }
