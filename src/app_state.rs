@@ -8,7 +8,7 @@ use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 use crate::app_state::SearchState::{BrowsingSearch, NotSearching, Searching};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum JsonValueType {
     Number(Number),
     String(String),
@@ -272,11 +272,42 @@ impl AppState {
         }
     }
 
+    pub fn collapse_level(&mut self) {
+        if let Some(index) = self.selection_index() {
+            match &self.items[index].value {
+                JsonValueType::Array | JsonValueType::Object => {
+                    let indent = self.items[index].indent;
+                    let line_number = self.items[index].line_number;
+                    for item in self.items.iter_mut() {
+                        if item.indent == indent {
+                            if item.value == JsonValueType::Array || item.value == JsonValueType::Object {
+                                item.collapsed = true;
+                            }
+                        }
+                    }
+                    self.recalculate_visible();
+                    self.list_state.select(self.visible_items()
+                        .iter()
+                        .position(|item| item.line_number == line_number)
+                    );
+                    self.recalculate_selection_level();
+                }
+                _ => {}
+            }
+        }
+    }
+
     pub fn uncollapse_all(&mut self) {
+        let line_number = self.visible_items()[self.list_state.selected().unwrap_or(0)].line_number;
         for item in self.items.iter_mut() {
             item.collapsed = false;
         }
         self.recalculate_visible();
+        self.list_state.select(self.visible_items()
+            .iter()
+            .position(|item| item.line_number == line_number)
+        );
+        self.recalculate_selection_level();
     }
 
     fn visible_indices(&self) -> Vec<usize> {

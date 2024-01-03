@@ -60,6 +60,12 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
                         KeyCode::Char('c') => {
                             app_state.toggle_collapsed();
                         }
+                        KeyCode::Char('C') => {
+                            app_state.collapse_level();
+                        }
+                        KeyCode::Char('u') => {
+                            app_state.uncollapse_all();
+                        }
                         KeyCode::Char('g') => {
                             app_state.select_top();
                         }
