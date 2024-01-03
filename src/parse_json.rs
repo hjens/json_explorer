@@ -7,14 +7,14 @@ fn parse_json(root_value: &Value, output: &mut Vec<JsonItem>, title: Option<Stri
         Value::Object(map) => {
             output.push(JsonItem::new(title, indent, JsonValueType::Object, breadcrumbs.clone()));
             for (key, value) in map {
-                parse_json(value, output, Some(key.to_string()), indent + 1, make_breadcrumbs(&breadcrumbs, key));
+                parse_json(value, output, Some(key.to_string()), indent + 1, make_breadcrumbs(&breadcrumbs, key, JsonValueType::Object));
             }
             output.push(JsonItem::new(None, indent, JsonValueType::ObjectEnd, breadcrumbs.clone()));
         }
         Value::Array(arr) => {
             output.push(JsonItem::new(title.clone(), indent, JsonValueType::Array, breadcrumbs.clone()));
             for (index, value) in arr.iter().enumerate() {
-                parse_json(value, output, None, indent + 1, make_breadcrumbs(&breadcrumbs, &index.to_string()));
+                parse_json(value, output, None, indent + 1, make_breadcrumbs(&breadcrumbs, &index.to_string(), JsonValueType::Array));
             }
             output.push(JsonItem::new(None, indent, JsonValueType::ArrayEnd, breadcrumbs.clone()));
         }
@@ -33,10 +33,14 @@ fn parse_json(root_value: &Value, output: &mut Vec<JsonItem>, title: Option<Stri
     }
 }
 
-fn make_breadcrumbs(root: &str, new: &str) -> String {
+fn make_breadcrumbs(root: &str, new: &str, value_type: JsonValueType) -> String {
     match root {
         "" => new.to_string(),
-        _ => format!("{} ▶ {}", root, new)
+        _ => match value_type {
+            JsonValueType::Array => format!("{} ▶ [{}]", root, new),
+            JsonValueType::Object => format!("{} ▶ {}", root, new),
+            _ => format!("{} ▶ {}", root, new),
+        }
     }
 }
 
