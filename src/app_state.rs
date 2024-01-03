@@ -167,14 +167,16 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(items: Vec<JsonItem>, filename: String) -> AppState {
-        AppState {
+        let mut app_state = AppState {
             list_state: ListState::default(),
             items,
             filename,
             list_height: 0,
-            search_state: SearchState::NotSearching,
+            search_state: NotSearching,
             search_input: Input::new("".to_string()),
-        }
+        };
+        app_state.select_next(1);
+        app_state
     }
 
     pub fn scroll_position(&self) -> usize {
