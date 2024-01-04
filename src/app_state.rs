@@ -3,6 +3,7 @@ use std::iter::zip;
 
 use crossterm::event::Event;
 use ratatui::{prelude::*, widgets::*};
+use serde_json::to_string;
 use serde_json::value::Number;
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
@@ -134,15 +135,18 @@ impl JsonItem {
     }
 
     pub fn update_is_search_result(&mut self, search_string: &str, is_searching: bool) {
+        let is_result = |s: &str| -> bool {
+            s.to_lowercase().contains(&search_string.to_lowercase())
+        };
         if search_string.is_empty() || !is_searching {
             self.value_is_search_result = false;
             self.name_is_search_result = false;
         } else {
-            self.name_is_search_result = self.name.clone().unwrap_or("".to_string()).contains(search_string);
+            self.name_is_search_result = is_result(&self.name.clone().unwrap_or("".to_string()));
             self.value_is_search_result = match &self.value {
-                JsonValueType::Number(n) => n.to_string().contains(search_string),
-                JsonValueType::String(s) => s.contains(search_string),
-                JsonValueType::Bool(b) => b.to_string().contains(search_string),
+                JsonValueType::Number(n) => is_result(&n.to_string()),
+                JsonValueType::String(s) => is_result(&s),
+                JsonValueType::Bool(b) => is_result(&b.to_string()),
                 _ => false
             };
         }
