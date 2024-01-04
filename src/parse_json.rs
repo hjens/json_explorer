@@ -1,6 +1,6 @@
 use serde_json::{Result, Value};
 
-use crate::app_state::{JsonItem, JsonValueType};
+use crate::json_item::{JsonItem, JsonValueType};
 
 fn parse_json(root_value: &Value, output: &mut Vec<JsonItem>, title: Option<String>, indent: usize, breadcrumbs: String) {
     match root_value {

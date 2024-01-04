@@ -15,6 +15,7 @@ mod ui;
 
 mod app_state;
 mod parse_json;
+mod json_item;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut args = std::env::args();
