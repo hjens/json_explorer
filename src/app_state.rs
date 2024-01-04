@@ -145,7 +145,7 @@ impl JsonItem {
             self.name_is_search_result = is_result(&self.name.clone().unwrap_or("".to_string()));
             self.value_is_search_result = match &self.value {
                 JsonValueType::Number(n) => is_result(&n.to_string()),
-                JsonValueType::String(s) => is_result(&s),
+                JsonValueType::String(s) => is_result(s),
                 JsonValueType::Bool(b) => is_result(&b.to_string()),
                 _ => false
             };
@@ -343,10 +343,8 @@ impl AppState {
                     let indent = self.items[index].indent;
                     let line_number = self.items[index].line_number;
                     for item in self.items.iter_mut() {
-                        if item.indent == indent {
-                            if item.value == JsonValueType::Array || item.value == JsonValueType::Object {
-                                item.collapsed = true;
-                            }
+                        if item.indent == indent && (item.value == JsonValueType::Array || item.value == JsonValueType::Object) {
+                            item.collapsed = true;
                         }
                     }
                     self.recalculate_visible();
@@ -476,16 +474,13 @@ impl AppState {
         for item in self.items.iter_mut() {
             item.update_is_search_result(self.search_input.value(), self.search_state != NotSearching);
         }
-        match self.search_state {
-            Searching => {
-                let search_results = self.search_results();
-                if !search_results.is_empty() {
-                    let new_index = 0;
-                    self.list_state.select(Some(search_results[new_index]));
-                    self.recalculate_selection_level();
-                }
+        if self.search_state == Searching {
+            let search_results = self.search_results();
+            if !search_results.is_empty() {
+                let new_index = 0;
+                self.list_state.select(Some(search_results[new_index]));
+                self.recalculate_selection_level();
             }
-            _ => {}
         }
     }
 
@@ -494,31 +489,25 @@ impl AppState {
     }
 
     pub fn next_search_result(&mut self) {
-        match self.search_state {
-            BrowsingSearch(Some(index)) => {
-                let search_results = self.search_results();
-                let new_index = (index + 1) % search_results.len();
-                self.list_state.select(Some(search_results[new_index]));
-                self.recalculate_selection_level();
-                self.search_state = BrowsingSearch(Some(new_index));
-            }
-            _ => {}
+        if let BrowsingSearch(Some(index)) = self.search_state {
+            let search_results = self.search_results();
+            let new_index = (index + 1) % search_results.len();
+            self.list_state.select(Some(search_results[new_index]));
+            self.recalculate_selection_level();
+            self.search_state = BrowsingSearch(Some(new_index));
         }
     }
 
     pub fn previous_search_result(&mut self) {
-        match self.search_state {
-            BrowsingSearch(Some(index)) => {
-                let search_results = self.search_results();
-                let new_index = match index {
-                    0 => search_results.len() - 1,
-                    _ => index - 1
-                };
-                self.list_state.select(Some(search_results[new_index]));
-                self.recalculate_selection_level();
-                self.search_state = BrowsingSearch(Some(new_index));
-            }
-            _ => {}
+        if let BrowsingSearch(Some(index)) = self.search_state {
+            let search_results = self.search_results();
+            let new_index = match index {
+                0 => search_results.len() - 1,
+                _ => index - 1
+            };
+            self.list_state.select(Some(search_results[new_index]));
+            self.recalculate_selection_level();
+            self.search_state = BrowsingSearch(Some(new_index));
         }
     }
 }

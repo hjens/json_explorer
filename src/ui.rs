@@ -227,13 +227,10 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
     let width = size.width.max(3) - 3; // keep 2 for borders and 1 for cursor
     let scroll = app_state.search_input.visual_scroll(width as usize);
     let cursor_y = 1;
-    match app_state.search_state {
-        SearchState::Searching => {
-            frame.set_cursor(
-                ((app_state.search_input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                cursor_y as u16,
-            )
-        }
-        _ => {}  // hide the cursor
+    if app_state.search_state == SearchState::Searching {
+        frame.set_cursor(
+            ((app_state.search_input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+            cursor_y as u16,
+        )
     }
 }

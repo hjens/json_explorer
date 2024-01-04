@@ -45,7 +45,7 @@ fn make_breadcrumbs(root: &str, new: &str, value_type: JsonValueType) -> String 
 }
 
 pub fn parse_json_string(json_string: &str) -> Result<Vec<JsonItem>> {
-    let root_value: Value = serde_json::from_str(&json_string)?;
+    let root_value: Value = serde_json::from_str(json_string)?;
 
     let mut json_vec = Vec::new();
     parse_json(&root_value, &mut json_vec, None, 0, "".to_string());
