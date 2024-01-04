@@ -1,6 +1,8 @@
 use ratatui::{prelude::*};
 use serde_json::Number;
 
+use crate::theme::THEME;
+
 #[derive(Clone, PartialEq)]
 pub enum JsonValueType {
     Number(Number),
@@ -49,9 +51,9 @@ impl JsonItem {
             if i < 1 {
                 output.push(Span::raw("   "));
             } else if Some(i) == self.selection_level {
-                output.push(Span::styled("│   ", Style::default().fg(Color::Cyan)));
+                output.push(Span::styled("│   ", Style::default().fg(THEME.selection_indicator_color)));
             } else {
-                output.push(Span::styled("│   ", Style::default().fg(Color::DarkGray)));
+                output.push(Span::styled("│   ", Style::default().fg(THEME.indent_color)));
             }
         }
         output
@@ -69,33 +71,34 @@ impl JsonItem {
             Some(name) => format!("{}: ", name),
             None => "".to_string()
         };
-        let name_span = Span::styled(name_str.clone(), Style::default().fg(Color::Yellow).bg(
+        let name_span = Span::styled(name_str.clone(), Style::default().fg(THEME.name_color).bg(
             match self.name_is_search_result {
-                true => Color::LightCyan,
+                true => THEME.search_indicator_color,
                 false => Color::default()
             }
         ));
         let value_bg = match self.value_is_search_result {
-            true => Color::LightCyan,
+            true => THEME.search_indicator_color,
             false => Color::default()
         };
         let name_value = match &self.value {
             JsonValueType::Number(num) => {
-                let value_span = Span::styled(format!("{}", num), Style::default().fg(Color::Red).bg(value_bg));
+                let value_span = Span::styled(format!("{}", num), Style::default().fg(THEME.number_color).bg(value_bg));
                 vec![name_span, value_span]
             }
             JsonValueType::String(s) => {
-                let value_span = Span::styled(format!("\"{}\"", s), Style::default().fg(Color::Blue).bg(value_bg));
+                let value_span = Span::styled(format!("\"{}\"", s), Style::default().fg(THEME.string_color).bg(value_bg));
                 vec![name_span, value_span]
             }
             JsonValueType::Bool(b) => {
-                let value_span = Span::styled(format!("{}", b), Style::default().fg(Color::Green).bg(value_bg));
+                let value_span = Span::styled(format!("{}", b), Style::default().fg(THEME.bool_color).bg(value_bg));
                 vec![name_span, value_span]
             }
             JsonValueType::Array => {
                 if self.collapsed {
-                    let brackets_span = Span::from("[...]");
-                    vec![name_span, brackets_span]
+                    vec![name_span, Span::from("["),
+                         Span::styled("...", Style::default().fg(Color::DarkGray)),
+                         Span::from("]")]
                 } else {
                     let brackets_span = Span::from("[");
                     vec![name_span, brackets_span]
@@ -107,8 +110,9 @@ impl JsonItem {
             }
             JsonValueType::Object => {
                 if self.collapsed {
-                    let brackets_span = Span::from("{...}");
-                    vec![name_span, brackets_span]
+                    vec![name_span, Span::from("{"),
+                         Span::styled("...", Style::default().fg(Color::DarkGray)),
+                         Span::from("}")]
                 } else {
                     let brackets_span = Span::from("{");
                     vec![name_span, brackets_span]
@@ -119,7 +123,7 @@ impl JsonItem {
                 vec![brackets_span]
             }
             JsonValueType::Null => {
-                let value_span = Span::styled("null", Style::default().fg(Color::Gray));
+                let value_span = Span::styled("null", Style::default().fg(THEME.null_color));
                 vec![name_span, value_span]
             }
         };

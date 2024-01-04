@@ -13,6 +13,7 @@ use ratatui::{prelude::*, widgets::*};
 
 use crate::app_state::AppState;
 use crate::app_state::SearchState;
+use crate::theme::THEME;
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState) -> io::Result<()> {
     loop {
@@ -162,14 +163,14 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
     // Breadcrumbs
     let breadbrumbs = Paragraph::new(Text::styled(
         app_state.breadbrumbs_text(),
-        Style::default().fg(Color::Green),
+        Style::default().fg(THEME.breadcrumbs_color),
     ))
         .block(Block::default().borders(Borders::ALL));
 
     // Status area
     let status_area = Paragraph::new(Text::styled(
         app_state.status_text(),
-        Style::default().fg(Color::LightYellow),
+        Style::default().fg(THEME.status_text_color),
     ))
         .block(Block::default().borders(Borders::ALL));
 
