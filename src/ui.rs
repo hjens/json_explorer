@@ -57,8 +57,14 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
                         KeyCode::Char('j') => {
                             app_state.select_next(1);
                         }
+                        KeyCode::Char('J') => {
+                            app_state.select_next_object();
+                        }
                         KeyCode::Char('k') => {
                             app_state.select_previous(1);
+                        }
+                        KeyCode::Char('K') => {
+                            app_state.select_previous_object();
                         }
                         KeyCode::Char('c') => {
                             app_state.toggle_collapsed();

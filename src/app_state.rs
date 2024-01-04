@@ -3,10 +3,10 @@ use std::iter::zip;
 
 use crossterm::event::Event;
 use ratatui::{prelude::*, widgets::*};
-use serde_json::to_string;
 use serde_json::value::Number;
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
+
 use crate::app_state::SearchState::{BrowsingSearch, NotSearching, Searching};
 
 #[derive(Clone, PartialEq)]
@@ -235,6 +235,26 @@ impl AppState {
         self.recalculate_selection_level();
     }
 
+    pub fn select_next_object(&mut self) {
+        let new_index = match self.list_state.selected() {
+            None => {
+                Some(0)
+            }
+            Some(selection_index) => {
+                let indent = self.visible_items()[selection_index].indent;
+                self.visible_items()
+                    .iter()
+                    .enumerate()
+                    .find(|(index, item)| {
+                        index > &selection_index && item.indent == indent
+                    })
+                    .map(|(index, _item)| index)
+            }
+        }.unwrap_or(self.list_state.selected().unwrap_or(0));
+        self.list_state.select(Some(new_index));
+        self.recalculate_selection_level();
+    }
+
     pub fn select_previous(&mut self, step: usize) {
         let new_index = match self.list_state.selected() {
             None => {
@@ -248,6 +268,26 @@ impl AppState {
                 }
             }
         };
+        self.list_state.select(Some(new_index));
+        self.recalculate_selection_level();
+    }
+
+    pub fn select_previous_object(&mut self) {
+        let new_index = match self.list_state.selected() {
+            None => {
+                Some(0)
+            }
+            Some(selection_index) => {
+                let indent = self.visible_items()[selection_index].indent;
+                self.visible_items()
+                    .iter()
+                    .enumerate()
+                    .rfind(|(index, item)| {
+                        index < &selection_index && item.indent == indent
+                    })
+                    .map(|(index, _item)| index)
+            }
+        }.unwrap_or(self.list_state.selected().unwrap_or(0));
         self.list_state.select(Some(new_index));
         self.recalculate_selection_level();
     }
@@ -470,7 +510,10 @@ impl AppState {
         match self.search_state {
             BrowsingSearch(Some(index)) => {
                 let search_results = self.search_results();
-                let new_index = match index {0 => search_results.len() - 1, _=> index - 1};
+                let new_index = match index {
+                    0 => search_results.len() - 1,
+                    _ => index - 1
+                };
                 self.list_state.select(Some(search_results[new_index]));
                 self.recalculate_selection_level();
                 self.search_state = BrowsingSearch(Some(new_index));
