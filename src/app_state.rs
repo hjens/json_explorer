@@ -191,7 +191,7 @@ impl AppState {
             }
             BrowsingSearch(Some(index)) => {
                 let num_results = self.search_results().len();
-                format!("Result {} of {}", index, num_results)
+                format!("Result {} of {}", index + 1, num_results)
             }
             _ => {
                 let values: Vec<&JsonItem> = self.items
