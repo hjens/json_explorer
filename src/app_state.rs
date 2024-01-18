@@ -19,6 +19,7 @@ pub enum SearchState {
 pub struct AppState {
     pub list_state: ListState,
     pub items: Vec<JsonItem>,
+    pub visible_items: Vec<JsonItem>,
     pub filename: String,
     pub list_height: u16,
     pub search_state: SearchState,
@@ -29,7 +30,8 @@ impl AppState {
     pub fn new(items: Vec<JsonItem>, filename: String) -> AppState {
         let mut app_state = AppState {
             list_state: ListState::default(),
-            items,
+            items: items.clone(),
+            visible_items: items.clone(),
             filename,
             list_height: 0,
             search_state: NotSearching,
@@ -73,14 +75,10 @@ impl AppState {
         }
     }
 
-    pub fn visible_items(&self) -> Vec<JsonItem> {
-        self.items.iter().filter(|i| i.visible).cloned().collect()
-    }
-
     pub fn select_next(&mut self, step: usize) {
         let new_index = match self.list_state.selected() {
             None => 0,
-            Some(index) => min(index + step, self.visible_items().len() - 1),
+            Some(index) => min(index + step, self.visible_items.len() - 1),
         };
         self.list_state.select(Some(new_index));
         self.recalculate_selection_level();
@@ -90,8 +88,8 @@ impl AppState {
         let new_index = match self.list_state.selected() {
             None => Some(0),
             Some(selection_index) => {
-                let indent = self.visible_items()[selection_index].indent;
-                self.visible_items()
+                let indent = self.visible_items[selection_index].indent;
+                self.visible_items
                     .iter()
                     .enumerate()
                     .find(|(index, item)| index > &selection_index && item.indent == indent)
@@ -122,8 +120,8 @@ impl AppState {
         let new_index = match self.list_state.selected() {
             None => Some(0),
             Some(selection_index) => {
-                let indent = self.visible_items()[selection_index].indent;
-                self.visible_items()
+                let indent = self.visible_items[selection_index].indent;
+                self.visible_items
                     .iter()
                     .enumerate()
                     .rfind(|(index, item)| index < &selection_index && item.indent == indent)
@@ -141,7 +139,7 @@ impl AppState {
     }
 
     pub fn select_bottom(&mut self) {
-        self.list_state.select(Some(self.visible_items().len() - 1));
+        self.list_state.select(Some(self.visible_items.len() - 1));
         self.recalculate_selection_level();
     }
 
@@ -152,7 +150,7 @@ impl AppState {
 
     pub fn select_middle_of_screen(&mut self) {
         let top = self.list_state.offset() as u16;
-        let num_items = self.visible_items().len() as u16;
+        let num_items = self.visible_items.len() as u16;
         let bottom = min(top + num_items - 1, top + self.list_height - 2);
         let index = (top + bottom) / 2;
         self.list_state.select(Some((index) as usize));
@@ -161,7 +159,7 @@ impl AppState {
 
     pub fn select_bottom_of_screen(&mut self) {
         let top = self.list_state.offset() as u16;
-        let num_items = self.visible_items().len() as u16;
+        let num_items = self.visible_items.len() as u16;
         let index = min(top + num_items - 1, top + self.list_height - 2);
         self.list_state.select(Some(index as usize));
         self.recalculate_selection_level();
@@ -195,7 +193,7 @@ impl AppState {
                     }
                     self.recalculate_visible();
                     self.list_state.select(
-                        self.visible_items()
+                        self.visible_items
                             .iter()
                             .position(|item| item.line_number == line_number),
                     );
@@ -207,13 +205,13 @@ impl AppState {
     }
 
     pub fn uncollapse_all(&mut self) {
-        let line_number = self.visible_items()[self.list_state.selected().unwrap_or(0)].line_number;
+        let line_number = self.visible_items[self.list_state.selected().unwrap_or(0)].line_number;
         for item in self.items.iter_mut() {
             item.collapsed = false;
         }
         self.recalculate_visible();
         self.list_state.select(
-            self.visible_items()
+            self.visible_items
                 .iter()
                 .position(|item| item.line_number == line_number),
         );
@@ -252,6 +250,7 @@ impl AppState {
                 collapse_indent = item.indent;
             }
         }
+        self.visible_items = self.items.iter().filter(|i| i.visible).cloned().collect();
     }
 
     fn recalculate_selection_level(&mut self) {
@@ -269,7 +268,7 @@ impl AppState {
             };
             let mut selection_level: usize;
             // Loop through all items and calculate selection level
-            for item in self.items.iter_mut() {
+            for item in self.visible_items.iter_mut() {
                 if item.breadcrumbs.starts_with(&selection_breadcrumbs) {
                     selection_level = 0;
                     // How many components of the breadcrumbs match?
