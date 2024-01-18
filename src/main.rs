@@ -1,5 +1,6 @@
 use std::error::Error;
-use std::io::{Read, Stdout};
+use std::io::Stdout;
+use std::process::exit;
 use std::{fs, io};
 
 use crossterm::{
@@ -20,19 +21,15 @@ mod theme;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut args = std::env::args();
-    let json_text: Result<String, Box<dyn Error>> = match args.len() {
-        1 => read_from_stdin(),
-        2 => {
-            let input_file: String = args.nth(1).unwrap();
-            Ok(fs::read_to_string(input_file).expect("Could not read from file"))
-        }
-        _ => {
-            println!("Usage: `jex [INPUT_FILE]`");
-            Ok("Wrong usage".to_string())
-        }
-    };
-    let json_values =
-        parse_json::parse_json_string(&json_text.unwrap()).expect("Could not parse json.");
+    let json_text: String;
+    if args.len() == 2 {
+        let input_file: String = args.nth(1).unwrap();
+        json_text = fs::read_to_string(input_file).expect("Could not read from file");
+    } else {
+        println!("Usage: `jex [INPUT_FILE]`");
+        exit(1);
+    }
+    let json_values = parse_json::parse_json_string(&json_text).expect("Could not parse json.");
 
     let mut app_state = AppState::new(json_values, "".to_string());
     let mut terminal: Terminal<CrosstermBackend<Stdout>> = create_terminal();
@@ -46,14 +43,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
-}
-
-fn read_from_stdin() -> Result<String, Box<dyn Error>> {
-    let mut input = String::new();
-    io::stdin()
-        .read_to_string(&mut input)
-        .expect("Failed to read");
-    Ok(input)
 }
 
 fn create_terminal() -> Terminal<CrosstermBackend<Stdout>> {
