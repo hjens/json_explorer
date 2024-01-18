@@ -77,7 +77,7 @@ impl JsonItem {
         terminal_height: i32,
     ) -> Line {
         if (item_index - selection_index).abs() > terminal_height {
-            return Line::from("-");
+            return Line::default();
         }
 
         let line_number = Span::styled(
