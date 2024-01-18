@@ -81,7 +81,7 @@ impl JsonItem {
         }
 
         let line_number = Span::styled(
-            format!("{:4} ", self.line_number),
+            format!("{:8} ", self.line_number),
             Style::default().fg(Color::DarkGray),
         );
         let indents = self.indent_spans();
