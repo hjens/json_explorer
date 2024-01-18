@@ -2,7 +2,7 @@ use std::cmp::min;
 use std::iter::zip;
 
 use crossterm::event::Event;
-use ratatui::{widgets::*};
+use ratatui::widgets::*;
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
@@ -50,9 +50,12 @@ impl AppState {
                 format!("Result {} of {}", index + 1, num_results)
             }
             _ => {
-                let values: Vec<&JsonItem> = self.items
+                let values: Vec<&JsonItem> = self
+                    .items
                     .iter()
-                    .filter(|i| i.value != JsonValueType::ObjectEnd && i.value != JsonValueType::ArrayEnd)
+                    .filter(|i| {
+                        i.value != JsonValueType::ObjectEnd && i.value != JsonValueType::ArrayEnd
+                    })
                     .collect();
                 format!("{} values in file", values.len())
             }
@@ -66,26 +69,18 @@ impl AppState {
     pub fn breadbrumbs_text(&self) -> String {
         match self.selection_index() {
             Some(index) => self.items[index].breadcrumbs.clone(),
-            None => "".to_string()
+            None => "".to_string(),
         }
     }
 
     pub fn visible_items(&self) -> Vec<JsonItem> {
-        self.items
-            .iter()
-            .filter(|i| i.visible)
-            .cloned()
-            .collect()
+        self.items.iter().filter(|i| i.visible).cloned().collect()
     }
 
     pub fn select_next(&mut self, step: usize) {
         let new_index = match self.list_state.selected() {
-            None => {
-                0
-            }
-            Some(index) => {
-                min(index + step, self.visible_items().len() - 1)
-            }
+            None => 0,
+            Some(index) => min(index + step, self.visible_items().len() - 1),
         };
         self.list_state.select(Some(new_index));
         self.recalculate_selection_level();
@@ -93,29 +88,24 @@ impl AppState {
 
     pub fn select_next_object(&mut self) {
         let new_index = match self.list_state.selected() {
-            None => {
-                Some(0)
-            }
+            None => Some(0),
             Some(selection_index) => {
                 let indent = self.visible_items()[selection_index].indent;
                 self.visible_items()
                     .iter()
                     .enumerate()
-                    .find(|(index, item)| {
-                        index > &selection_index && item.indent == indent
-                    })
+                    .find(|(index, item)| index > &selection_index && item.indent == indent)
                     .map(|(index, _item)| index)
             }
-        }.unwrap_or(self.list_state.selected().unwrap_or(0));
+        }
+        .unwrap_or(self.list_state.selected().unwrap_or(0));
         self.list_state.select(Some(new_index));
         self.recalculate_selection_level();
     }
 
     pub fn select_previous(&mut self, step: usize) {
         let new_index = match self.list_state.selected() {
-            None => {
-                0
-            }
+            None => 0,
             Some(index) => {
                 if index > step {
                     index - step
@@ -130,20 +120,17 @@ impl AppState {
 
     pub fn select_previous_object(&mut self) {
         let new_index = match self.list_state.selected() {
-            None => {
-                Some(0)
-            }
+            None => Some(0),
             Some(selection_index) => {
                 let indent = self.visible_items()[selection_index].indent;
                 self.visible_items()
                     .iter()
                     .enumerate()
-                    .rfind(|(index, item)| {
-                        index < &selection_index && item.indent == indent
-                    })
+                    .rfind(|(index, item)| index < &selection_index && item.indent == indent)
                     .map(|(index, _item)| index)
             }
-        }.unwrap_or(self.list_state.selected().unwrap_or(0));
+        }
+        .unwrap_or(self.list_state.selected().unwrap_or(0));
         self.list_state.select(Some(new_index));
         self.recalculate_selection_level();
     }
@@ -199,14 +186,18 @@ impl AppState {
                     let indent = self.items[index].indent;
                     let line_number = self.items[index].line_number;
                     for item in self.items.iter_mut() {
-                        if item.indent == indent && (item.value == JsonValueType::Array || item.value == JsonValueType::Object) {
+                        if item.indent == indent
+                            && (item.value == JsonValueType::Array
+                                || item.value == JsonValueType::Object)
+                        {
                             item.collapsed = true;
                         }
                     }
                     self.recalculate_visible();
-                    self.list_state.select(self.visible_items()
-                        .iter()
-                        .position(|item| item.line_number == line_number)
+                    self.list_state.select(
+                        self.visible_items()
+                            .iter()
+                            .position(|item| item.line_number == line_number),
                     );
                     self.recalculate_selection_level();
                 }
@@ -221,9 +212,10 @@ impl AppState {
             item.collapsed = false;
         }
         self.recalculate_visible();
-        self.list_state.select(self.visible_items()
-            .iter()
-            .position(|item| item.line_number == line_number)
+        self.list_state.select(
+            self.visible_items()
+                .iter()
+                .position(|item| item.line_number == line_number),
         );
         self.recalculate_selection_level();
     }
@@ -251,7 +243,7 @@ impl AppState {
             if is_in_collapsed {
                 if item.indent == collapse_indent {
                     is_in_collapsed = false;
-                    item.visible = false;  // closing bracket
+                    item.visible = false; // closing bracket
                     continue;
                 }
                 item.visible = false;
@@ -266,13 +258,14 @@ impl AppState {
         if let Some(index) = self.selection_index() {
             // For non-containers, strip away the last component of the breadcrumbs
             let selection_breadcrumbs = match self.items[index].value {
-                JsonValueType::Number(_) | JsonValueType::Bool(_) | JsonValueType::String(_) | JsonValueType::Null => {
-                    match self.items[index].breadcrumbs.rsplit_once(" ▶ ") {
-                        Some((val, _)) => val.to_string(),
-                        None => "".to_string()
-                    }
-                }
-                _ => self.items[index].breadcrumbs.clone()
+                JsonValueType::Number(_)
+                | JsonValueType::Bool(_)
+                | JsonValueType::String(_)
+                | JsonValueType::Null => match self.items[index].breadcrumbs.rsplit_once(" ▶ ") {
+                    Some((val, _)) => val.to_string(),
+                    None => "".to_string(),
+                },
+                _ => self.items[index].breadcrumbs.clone(),
             };
             let mut selection_level: usize;
             // Loop through all items and calculate selection level
@@ -280,7 +273,10 @@ impl AppState {
                 if item.breadcrumbs.starts_with(&selection_breadcrumbs) {
                     selection_level = 0;
                     // How many components of the breadcrumbs match?
-                    for (p1, p2) in zip(selection_breadcrumbs.split(" ▶ "), item.breadcrumbs.split(" ▶ ")) {
+                    for (p1, p2) in zip(
+                        selection_breadcrumbs.split(" ▶ "),
+                        item.breadcrumbs.split(" ▶ "),
+                    ) {
                         if p1 == p2 {
                             selection_level += 1;
                         } else {
@@ -308,7 +304,7 @@ impl AppState {
     pub fn finish_searching(&mut self) {
         self.search_state = match self.search_results().first() {
             Some(_) => BrowsingSearch(Some(0)),
-            None => NotSearching
+            None => NotSearching,
         };
     }
 
@@ -328,7 +324,10 @@ impl AppState {
 
     fn update_search_results(&mut self) {
         for item in self.items.iter_mut() {
-            item.update_is_search_result(self.search_input.value(), self.search_state != NotSearching);
+            item.update_is_search_result(
+                self.search_input.value(),
+                self.search_state != NotSearching,
+            );
         }
         if self.search_state == Searching {
             let search_results = self.search_results();
@@ -359,7 +358,7 @@ impl AppState {
             let search_results = self.search_results();
             let new_index = match index {
                 0 => search_results.len() - 1,
-                _ => index - 1
+                _ => index - 1,
             };
             self.list_state.select(Some(search_results[new_index]));
             self.recalculate_selection_level();

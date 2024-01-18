@@ -1,6 +1,6 @@
-use std::{fs, io};
 use std::error::Error;
 use std::io::{Read, Stdout};
+use std::{fs, io};
 
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
@@ -14,16 +14,14 @@ use crate::app_state::AppState;
 mod ui;
 
 mod app_state;
-mod parse_json;
 mod json_item;
+mod parse_json;
 mod theme;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut args = std::env::args();
     let json_text: Result<String, Box<dyn Error>> = match args.len() {
-        1 => {
-            read_from_stdin()
-        }
+        1 => read_from_stdin(),
         2 => {
             let input_file: String = args.nth(1).unwrap();
             Ok(fs::read_to_string(input_file).expect("Could not read from file"))
@@ -33,7 +31,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             Ok("Wrong usage".to_string())
         }
     };
-    let json_values = parse_json::parse_json_string(&json_text.unwrap()).expect("Could not parse json.");
+    let json_values =
+        parse_json::parse_json_string(&json_text.unwrap()).expect("Could not parse json.");
 
     let mut app_state = AppState::new(json_values, "".to_string());
     let mut terminal: Terminal<CrosstermBackend<Stdout>> = create_terminal();
@@ -51,7 +50,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn read_from_stdin() -> Result<String, Box<dyn Error>> {
     let mut input = String::new();
-    io::stdin().read_to_string(&mut input).expect("Failed to read");
+    io::stdin()
+        .read_to_string(&mut input)
+        .expect("Failed to read");
     Ok(input)
 }
 
@@ -70,6 +71,6 @@ fn destroy_terminal(terminal: &mut Terminal<CrosstermBackend<Stdout>>) {
         LeaveAlternateScreen,
         DisableMouseCapture
     )
-        .expect("Unable to restore terminal");
+    .expect("Unable to restore terminal");
     terminal.show_cursor().expect("Unable to show cursor");
 }

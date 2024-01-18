@@ -1,15 +1,13 @@
 use std::io;
 
-use crossterm::{
-    event::{self, Event, KeyCode},
-};
-use ratatui::{Frame, Terminal};
+use crossterm::event::{self, Event, KeyCode};
 use ratatui::{
     backend::Backend,
     style::{Color, Modifier, Style},
     widgets::Block,
 };
 use ratatui::{prelude::*, widgets::*};
+use ratatui::{Frame, Terminal};
 
 use crate::app_state::AppState;
 use crate::app_state::SearchState;
@@ -21,96 +19,90 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
 
         if let Event::Key(key) = event::read()? {
             match app_state.search_state {
-                SearchState::Searching => {
-                    match key.code {
-                        KeyCode::Enter => {
-                            app_state.finish_searching();
-                        }
-                        KeyCode::Esc => {
-                            app_state.cancel_searching();
-                        }
-                        _ => {
-                            app_state.update_search(&Event::Key(key));
-                        }
+                SearchState::Searching => match key.code {
+                    KeyCode::Enter => {
+                        app_state.finish_searching();
                     }
-                }
-                SearchState::BrowsingSearch(_) => {
-                    match key.code {
-                        KeyCode::Char('n') => {
-                            app_state.next_search_result();
-                        }
-                        KeyCode::Char('N') => {
-                            app_state.previous_search_result();
-                        }
-                        KeyCode::Esc => {
-                            app_state.cancel_searching();
-                        }
-                        KeyCode::Char('/') => {
-                            app_state.start_searching();
-                        }
-                        KeyCode::Char('q') => return Ok(()),
-                        _ => {}
+                    KeyCode::Esc => {
+                        app_state.cancel_searching();
                     }
-                }
-                SearchState::NotSearching => {
-                    match key.code {
-                        KeyCode::Char('q') => return Ok(()),
-                        KeyCode::Char('j') => {
-                            app_state.select_next(1);
-                        }
-                        KeyCode::Char('J') => {
-                            app_state.select_next_object();
-                        }
-                        KeyCode::Char('k') => {
-                            app_state.select_previous(1);
-                        }
-                        KeyCode::Char('K') => {
-                            app_state.select_previous_object();
-                        }
-                        KeyCode::Char('c') => {
-                            app_state.toggle_collapsed();
-                        }
-                        KeyCode::Char('C') => {
-                            app_state.collapse_level();
-                        }
-                        KeyCode::Char('u') => {
-                            app_state.uncollapse_all();
-                        }
-                        KeyCode::Char('g') => {
-                            app_state.select_top();
-                        }
-                        KeyCode::Char('G') => {
-                            app_state.select_bottom();
-                        }
-                        KeyCode::Char('H') => {
-                            app_state.select_top_of_screen();
-                        }
-                        KeyCode::Char('M') => {
-                            app_state.select_middle_of_screen();
-                        }
-                        KeyCode::Char('L') => {
-                            app_state.select_bottom_of_screen();
-                        }
-                        KeyCode::Char(' ') => {
-                            if let Ok(size) = terminal.size() {
-                                if size.height > 5 {
-                                    app_state.select_next((size.height - 5) as usize);
-                                }
+                    _ => {
+                        app_state.update_search(&Event::Key(key));
+                    }
+                },
+                SearchState::BrowsingSearch(_) => match key.code {
+                    KeyCode::Char('n') => {
+                        app_state.next_search_result();
+                    }
+                    KeyCode::Char('N') => {
+                        app_state.previous_search_result();
+                    }
+                    KeyCode::Esc => {
+                        app_state.cancel_searching();
+                    }
+                    KeyCode::Char('/') => {
+                        app_state.start_searching();
+                    }
+                    KeyCode::Char('q') => return Ok(()),
+                    _ => {}
+                },
+                SearchState::NotSearching => match key.code {
+                    KeyCode::Char('q') => return Ok(()),
+                    KeyCode::Char('j') => {
+                        app_state.select_next(1);
+                    }
+                    KeyCode::Char('J') => {
+                        app_state.select_next_object();
+                    }
+                    KeyCode::Char('k') => {
+                        app_state.select_previous(1);
+                    }
+                    KeyCode::Char('K') => {
+                        app_state.select_previous_object();
+                    }
+                    KeyCode::Char('c') => {
+                        app_state.toggle_collapsed();
+                    }
+                    KeyCode::Char('C') => {
+                        app_state.collapse_level();
+                    }
+                    KeyCode::Char('u') => {
+                        app_state.uncollapse_all();
+                    }
+                    KeyCode::Char('g') => {
+                        app_state.select_top();
+                    }
+                    KeyCode::Char('G') => {
+                        app_state.select_bottom();
+                    }
+                    KeyCode::Char('H') => {
+                        app_state.select_top_of_screen();
+                    }
+                    KeyCode::Char('M') => {
+                        app_state.select_middle_of_screen();
+                    }
+                    KeyCode::Char('L') => {
+                        app_state.select_bottom_of_screen();
+                    }
+                    KeyCode::Char(' ') => {
+                        if let Ok(size) = terminal.size() {
+                            if size.height > 5 {
+                                app_state.select_next((size.height - 5) as usize);
                             }
                         }
-                        KeyCode::Backspace => {
-                            if let Ok(size) = terminal.size() {
-                                if size.height > 5 {
-                                    app_state.select_previous((size.height - 5) as usize);
-                                }
+                    }
+                    KeyCode::Backspace => {
+                        if let Ok(size) = terminal.size() {
+                            if size.height > 5 {
+                                app_state.select_previous((size.height - 5) as usize);
                             }
                         }
-                        KeyCode::Char('/') => {
-                            app_state.start_searching();
-                        }
-                        _ => {}
                     }
-                }
+                    KeyCode::Char('/') => {
+                        app_state.start_searching();
+                    }
+                    _ => {}
+                },
             }
         }
     }
@@ -121,43 +113,33 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
     let size = frame.size();
 
     let chunks = match app_state.search_state {
-        SearchState::Searching | SearchState::BrowsingSearch(_) => {
-            Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Length(3),
-                    Constraint::Min(5),
-                    Constraint::Length(3)
-                ])
-                .split(size)
-        }
-        _ => {
-            Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Min(5),
-                    Constraint::Length(3)
-                ])
-                .split(size)
-        }
+        SearchState::Searching | SearchState::BrowsingSearch(_) => Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(3),
+                Constraint::Min(5),
+                Constraint::Length(3),
+            ])
+            .split(size),
+        _ => Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(5), Constraint::Length(3)])
+            .split(size),
     };
     let list_chunk = match app_state.search_state {
         SearchState::Searching => chunks[1],
         SearchState::BrowsingSearch(_) => chunks[1],
-        _ => chunks[0]
+        _ => chunks[0],
     };
     app_state.list_height = list_chunk.height;
     let bottom_chunk = match app_state.search_state {
         SearchState::Searching | SearchState::BrowsingSearch(_) => chunks[2],
-        _ => chunks[1]
+        _ => chunks[1],
     };
 
     let bottom_layout = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(70),
-            Constraint::Percentage(30),
-        ])
+        .constraints([Constraint::Percentage(70), Constraint::Percentage(30)])
         .split(bottom_chunk);
 
     // Breadcrumbs
@@ -165,14 +147,14 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
         app_state.breadbrumbs_text(),
         Style::default().fg(THEME.breadcrumbs_color),
     ))
-        .block(Block::default().borders(Borders::ALL));
+    .block(Block::default().borders(Borders::ALL));
 
     // Status area
     let status_area = Paragraph::new(Text::styled(
         app_state.status_text(),
         Style::default().fg(THEME.status_text_color),
     ))
-        .block(Block::default().borders(Borders::ALL));
+    .block(Block::default().borders(Borders::ALL));
 
     // Main view
     let visible_items = app_state.visible_items();
@@ -180,19 +162,25 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
     let list_items: Vec<ListItem> = visible_items
         .iter()
         .enumerate()
-        .map(|(index, item)| ListItem::new(item.display_text(
-            index as i32,
-            selection_index,
-            list_chunk.height as i32,
-        )))
+        .map(|(index, item)| {
+            ListItem::new(item.display_text(
+                index as i32,
+                selection_index,
+                list_chunk.height as i32,
+            ))
+        })
         .collect();
 
     let list = List::new(list_items)
-        .block(Block::default().borders(Borders::TOP).title(app_state.filename.clone()))
+        .block(
+            Block::default()
+                .borders(Borders::TOP)
+                .title(app_state.filename.clone()),
+        )
         .highlight_style(
             Style::default()
                 .bg(Color::Gray)
-                .add_modifier(Modifier::BOLD)
+                .add_modifier(Modifier::BOLD),
         );
 
     // Scrollbar
@@ -200,7 +188,8 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
         .orientation(ScrollbarOrientation::VerticalRight)
         .begin_symbol(Some("↑"))
         .end_symbol(Some("↓"));
-    let mut scrollbar_state = ScrollbarState::new(visible_items.iter().len()).position(app_state.scroll_position());
+    let mut scrollbar_state =
+        ScrollbarState::new(visible_items.iter().len()).position(app_state.scroll_position());
 
     // Search
     let search = Paragraph::new(app_state.search_text().to_string().clone())
@@ -220,7 +209,9 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
     frame.render_widget(breadbrumbs, bottom_layout[0]);
     frame.render_widget(status_area, bottom_layout[1]);
     match app_state.search_state {
-        SearchState::Searching | SearchState::BrowsingSearch(_) => { frame.render_widget(search, chunks[0]) }
+        SearchState::Searching | SearchState::BrowsingSearch(_) => {
+            frame.render_widget(search, chunks[0])
+        }
         _ => {}
     }
 
