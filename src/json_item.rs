@@ -27,6 +27,7 @@ pub struct JsonItem {
     pub selection_level: Option<usize>,
     pub name_is_search_result: bool,
     pub value_is_search_result: bool,
+    pub len: usize,
 }
 
 impl JsonItem {
@@ -35,6 +36,7 @@ impl JsonItem {
         indent: usize,
         value: JsonValueType,
         breadcrumbs: String,
+        len: usize,
     ) -> JsonItem {
         JsonItem {
             name,
@@ -47,6 +49,7 @@ impl JsonItem {
             selection_level: None,
             name_is_search_result: false,
             value_is_search_result: false,
+            len,
         }
     }
 
@@ -129,7 +132,10 @@ impl JsonItem {
                     vec![
                         name_span,
                         Span::from("["),
-                        Span::styled("...", Style::default().fg(Color::DarkGray)),
+                        Span::styled(
+                            format!("{} items", self.len),
+                            Style::default().fg(Color::DarkGray),
+                        ),
                         Span::from("]"),
                     ]
                 } else {
@@ -146,7 +152,10 @@ impl JsonItem {
                     vec![
                         name_span,
                         Span::from("{"),
-                        Span::styled("...", Style::default().fg(Color::DarkGray)),
+                        Span::styled(
+                            format!("{} items", self.len),
+                            Style::default().fg(Color::DarkGray),
+                        ),
                         Span::from("}"),
                     ]
                 } else {
