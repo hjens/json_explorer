@@ -53,10 +53,14 @@ impl AppState {
     }
 
     fn bottom_index(&self) -> usize {
-        min(
-            self.top_index + (self.list_height as usize),
-            self.visible_items.len() - 1,
-        )
+        if self.list_height < 2 {
+            1
+        } else {
+            let top = self.top_index as i32;
+            let height = self.list_height as i32;
+            let num_visible_items = self.visible_items.len() as i32;
+            min(top + height - 1, num_visible_items - 1) as usize
+        }
     }
 
     pub fn display_items(&self) -> Vec<JsonItem> {
@@ -304,7 +308,11 @@ impl AppState {
                 self.top_index = index;
             }
             if index >= self.bottom_index() {
-                self.top_index = index - (self.list_height as usize);
+                let mut new_top_index = (index as i32) - (self.list_height as i32) + 1;
+                if new_top_index < 0 {
+                    new_top_index = 0;
+                }
+                self.top_index = new_top_index as usize;
             }
         }
     }
