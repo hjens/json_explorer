@@ -59,7 +59,7 @@ impl AppState {
             let top = self.top_index as i32;
             let height = self.list_height as i32;
             let num_visible_items = self.visible_items.len() as i32;
-            min(top + height - 1, num_visible_items - 1) as usize
+            min(top + height - 1, num_visible_items) as usize
         }
     }
 
