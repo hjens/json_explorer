@@ -73,23 +73,20 @@ impl JsonItem {
         output
     }
 
-    pub fn display_text(
-        &self,
-        item_index: i32,
-        selection_index: i32,
-        terminal_height: i32,
-    ) -> Line {
-        if (item_index - selection_index).abs() > terminal_height {
-            return Line::default();
-        }
-
+    pub fn display_text(&self, selection_index: Option<usize>) -> Line {
         let line_number = Span::styled(
             format!("{:8} ", self.line_number),
             Style::default().fg(Color::DarkGray),
         );
         let indents = self.indent_spans();
+        let selection_str = if selection_index == Some(self.line_number) {
+            "> "
+        } else {
+            ""
+        };
+
         let name_str = match &self.name {
-            Some(name) => format!("{}: ", name),
+            Some(name) => format!("{}{}: ", selection_str, name),
             None => "".to_string(),
         };
         let name_span = Span::styled(

@@ -25,7 +25,10 @@ pub struct AppState {
     pub search_state: SearchState,
     pub search_input: Input,
     num_items_in_file: usize,
+    top_index: usize,
 }
+// list_state.selected: index into visible_items
+// self.selection_index(): index into items
 
 impl AppState {
     pub fn new(items: Vec<JsonItem>, filename: String) -> AppState {
@@ -38,6 +41,7 @@ impl AppState {
             search_state: NotSearching,
             search_input: Input::new("".to_string()),
             num_items_in_file: 0,
+            top_index: 0,
         };
         let values: Vec<&JsonItem> = items
             .iter()
@@ -46,6 +50,11 @@ impl AppState {
         app_state.num_items_in_file = values.len();
         app_state.select_next(1);
         app_state
+    }
+
+    pub fn display_items(&self) -> Vec<JsonItem> {
+        let bottom_index = self.top_index + (self.list_height as usize);
+        self.visible_items[self.top_index..bottom_index].to_vec()
     }
 
     pub fn status_text(&self) -> String {
@@ -80,8 +89,7 @@ impl AppState {
             None => 0,
             Some(index) => min(index + step, self.visible_items.len() - 1),
         };
-        self.list_state.select(Some(new_index));
-        self.recalculate_selection_level();
+        self.select_index(new_index);
     }
 
     pub fn select_next_object(&mut self) {
@@ -97,8 +105,7 @@ impl AppState {
             }
         }
         .unwrap_or(self.list_state.selected().unwrap_or(0));
-        self.list_state.select(Some(new_index));
-        self.recalculate_selection_level();
+        self.select_index(new_index);
     }
 
     pub fn select_previous(&mut self, step: usize) {
@@ -112,8 +119,7 @@ impl AppState {
                 }
             }
         };
-        self.list_state.select(Some(new_index));
-        self.recalculate_selection_level();
+        self.select_index(new_index);
     }
 
     pub fn select_previous_object(&mut self) {
@@ -129,40 +135,34 @@ impl AppState {
             }
         }
         .unwrap_or(self.list_state.selected().unwrap_or(0));
-        self.list_state.select(Some(new_index));
-        self.recalculate_selection_level();
+        self.select_index(new_index);
     }
 
     pub fn select_top(&mut self) {
-        self.list_state.select(Some(0));
-        self.recalculate_selection_level();
+        self.select_index(0);
     }
 
     pub fn select_bottom(&mut self) {
-        self.list_state.select(Some(self.visible_items.len() - 1));
-        self.recalculate_selection_level();
+        self.select_index(self.visible_items.len() - 1);
     }
 
     pub fn select_top_of_screen(&mut self) {
-        self.list_state.select(Some(self.list_state.offset()));
-        self.recalculate_selection_level();
+        self.select_index(self.top_index);
     }
 
     pub fn select_middle_of_screen(&mut self) {
-        let top = self.list_state.offset() as u16;
+        let top = self.top_index as u16;
         let num_items = self.visible_items.len() as u16;
         let bottom = min(top + num_items - 1, top + self.list_height - 2);
         let index = (top + bottom) / 2;
-        self.list_state.select(Some((index) as usize));
-        self.recalculate_selection_level();
+        self.select_index((index) as usize);
     }
 
     pub fn select_bottom_of_screen(&mut self) {
-        let top = self.list_state.offset() as u16;
+        let top = self.top_index as u16;
         let num_items = self.visible_items.len() as u16;
         let index = min(top + num_items - 1, top + self.list_height - 2);
-        self.list_state.select(Some(index as usize));
-        self.recalculate_selection_level();
+        self.select_index(index as usize);
     }
 
     pub fn toggle_collapsed(&mut self) {
@@ -170,7 +170,11 @@ impl AppState {
             match &self.items[index].value {
                 JsonValueType::Array | JsonValueType::Object => {
                     self.items[index].collapsed = !self.items[index].collapsed;
+                    if self.selection_index().unwrap_or(0) > self.items.len() {
+                        self.select_index(self.items.len() - 1);
+                    }
                     self.recalculate_visible();
+                    self.recalculate_scroll_position();
                 }
                 _ => {}
             }
@@ -192,12 +196,12 @@ impl AppState {
                         }
                     }
                     self.recalculate_visible();
-                    self.list_state.select(
+                    self.select_index(
                         self.visible_items
                             .iter()
-                            .position(|item| item.line_number == line_number),
+                            .position(|item| item.line_number == line_number)
+                            .unwrap_or(0),
                     );
-                    self.recalculate_selection_level();
                 }
                 _ => {}
             }
@@ -210,18 +214,17 @@ impl AppState {
             item.collapsed = false;
         }
         self.recalculate_visible();
-        self.list_state.select(
+        self.select_index(
             self.visible_items
                 .iter()
-                .position(|item| item.line_number == line_number),
+                .position(|item| item.line_number == line_number)
+                .unwrap_or(0),
         );
-        self.recalculate_selection_level();
     }
 
     pub fn selection_index(&self) -> Option<usize> {
         self.list_state
             .selected()
-            .map(|index| self.visible_indices()[index])
             .map(|index| self.visible_items[index].line_number)
     }
 
@@ -246,6 +249,7 @@ impl AppState {
     }
 
     fn recalculate_selection_level(&mut self) {
+        // TODO: optimize
         if let Some(index) = self.selection_index() {
             // For non-containers, strip away the last component of the breadcrumbs
             let selection_breadcrumbs = match self.items[index].value {
@@ -278,6 +282,24 @@ impl AppState {
                 } else {
                     item.selection_level = None;
                 }
+            }
+        }
+    }
+
+    fn select_index(&mut self, index: usize) {
+        self.list_state.select(Some(index));
+        self.recalculate_selection_level();
+        self.recalculate_scroll_position();
+    }
+
+    fn recalculate_scroll_position(&mut self) {
+        if let Some(index) = self.list_state.selected() {
+            if index < self.top_index {
+                self.top_index = index;
+            }
+            let bottom_index = self.top_index + (self.list_height as usize);
+            if index >= bottom_index {
+                self.top_index = index - (self.list_height as usize);
             }
         }
     }
@@ -324,8 +346,7 @@ impl AppState {
             let search_results = self.search_results();
             if !search_results.is_empty() {
                 let new_index = 0;
-                self.list_state.select(Some(search_results[new_index]));
-                self.recalculate_selection_level();
+                self.select_index(search_results[new_index]);
             }
         }
     }
@@ -338,8 +359,7 @@ impl AppState {
         if let BrowsingSearch(Some(index)) = self.search_state {
             let search_results = self.search_results();
             let new_index = (index + 1) % search_results.len();
-            self.list_state.select(Some(search_results[new_index]));
-            self.recalculate_selection_level();
+            self.select_index(search_results[new_index]);
             self.search_state = BrowsingSearch(Some(new_index));
         }
     }
@@ -351,8 +371,7 @@ impl AppState {
                 0 => search_results.len() - 1,
                 _ => index - 1,
             };
-            self.list_state.select(Some(search_results[new_index]));
-            self.recalculate_selection_level();
+            self.select_index(search_results[new_index]);
             self.search_state = BrowsingSearch(Some(new_index));
         }
     }
