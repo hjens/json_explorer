@@ -78,15 +78,11 @@ impl JsonItem {
             format!("{:8} ", self.line_number),
             Style::default().fg(Color::DarkGray),
         );
-        let selection_str = if selection_index == Some(self.line_number) {
-            "➤ "
+        let selection_span = if selection_index == Some(self.line_number) {
+            Span::styled("▶ ", Style::default().fg(THEME.selection_indicator_color))
         } else {
-            "  "
+            Span::raw("  ")
         };
-        let selection_span = Span::styled(
-            selection_str,
-            Style::default().fg(THEME.selection_indicator_color),
-        );
         let indents = self.indent_spans();
 
         let name_str = match &self.name {
