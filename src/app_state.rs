@@ -24,6 +24,7 @@ pub struct AppState {
     pub list_height: u16,
     pub search_state: SearchState,
     pub search_input: Input,
+    num_items_in_file: usize,
 }
 
 impl AppState {
@@ -36,7 +37,13 @@ impl AppState {
             list_height: 0,
             search_state: NotSearching,
             search_input: Input::new("".to_string()),
+            num_items_in_file: 0,
         };
+        let values: Vec<&JsonItem> = items
+            .iter()
+            .filter(|i| i.value != JsonValueType::ObjectEnd && i.value != JsonValueType::ArrayEnd)
+            .collect();
+        app_state.num_items_in_file = values.len();
         app_state.select_next(1);
         app_state
     }
@@ -52,14 +59,7 @@ impl AppState {
                 format!("Result {} of {}", index + 1, num_results)
             }
             _ => {
-                let values: Vec<&JsonItem> = self
-                    .items
-                    .iter()
-                    .filter(|i| {
-                        i.value != JsonValueType::ObjectEnd && i.value != JsonValueType::ArrayEnd
-                    })
-                    .collect();
-                format!("{} values in file", values.len())
+                format!("{} values in file", self.num_items_in_file)
             }
         }
     }
