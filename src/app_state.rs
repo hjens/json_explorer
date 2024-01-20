@@ -308,7 +308,7 @@ impl AppState {
                 self.top_index = index;
             }
             if index >= self.bottom_index() {
-                let mut new_top_index = (index as i32) - (self.list_height as i32) + 1;
+                let mut new_top_index = (index as i32) - (self.list_height as i32) + 2;
                 if new_top_index < 0 {
                     new_top_index = 0;
                 }
