@@ -52,9 +52,15 @@ impl AppState {
         app_state
     }
 
+    fn bottom_index(&self) -> usize {
+        min(
+            self.top_index + (self.list_height as usize),
+            self.visible_items.len() - 1,
+        )
+    }
+
     pub fn display_items(&self) -> Vec<JsonItem> {
-        let bottom_index = self.top_index + (self.list_height as usize);
-        self.visible_items[self.top_index..bottom_index].to_vec()
+        self.visible_items[self.top_index..self.bottom_index()].to_vec()
     }
 
     pub fn status_text(&self) -> String {
@@ -170,11 +176,11 @@ impl AppState {
             match &self.items[index].value {
                 JsonValueType::Array | JsonValueType::Object => {
                     self.items[index].collapsed = !self.items[index].collapsed;
-                    if self.selection_index().unwrap_or(0) > self.items.len() {
-                        self.select_index(self.items.len() - 1);
-                    }
+                    //if self.list_state.selected().unwrap_or(0) > self.visible_items.len() {
+                    //self.select_index(self.visible_items.len() - 1);
+                    //}
                     self.recalculate_visible();
-                    self.recalculate_scroll_position();
+                    //self.recalculate_scroll_position();
                 }
                 _ => {}
             }
@@ -297,8 +303,7 @@ impl AppState {
             if index < self.top_index {
                 self.top_index = index;
             }
-            let bottom_index = self.top_index + (self.list_height as usize);
-            if index >= bottom_index {
+            if index >= self.bottom_index() {
                 self.top_index = index - (self.list_height as usize);
             }
         }
