@@ -16,7 +16,7 @@ pub struct Theme {
 }
 
 pub const THEME: Theme = Theme {
-    name_color: Color::LightBlue,
+    name_color: Color::White,
     string_color: Color::Yellow,
     number_color: Color::LightBlue,
     bool_color: Color::Cyan,
