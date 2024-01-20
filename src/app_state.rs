@@ -218,19 +218,11 @@ impl AppState {
         self.recalculate_selection_level();
     }
 
-    fn visible_indices(&self) -> Vec<usize> {
-        self.items
-            .iter()
-            .enumerate()
-            .filter(|(_index, value)| value.visible)
-            .map(|(index, _value)| index)
-            .collect()
-    }
-
     pub fn selection_index(&self) -> Option<usize> {
         self.list_state
             .selected()
             .map(|index| self.visible_indices()[index])
+            .map(|index| self.visible_items[index].line_number)
     }
 
     fn recalculate_visible(&mut self) {
