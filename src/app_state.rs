@@ -180,11 +180,7 @@ impl AppState {
             match &self.items[index].value {
                 JsonValueType::Array | JsonValueType::Object => {
                     self.items[index].collapsed = !self.items[index].collapsed;
-                    //if self.list_state.selected().unwrap_or(0) > self.visible_items.len() {
-                    //self.select_index(self.visible_items.len() - 1);
-                    //}
                     self.recalculate_visible();
-                    //self.recalculate_scroll_position();
                 }
                 _ => {}
             }
@@ -239,6 +235,7 @@ impl AppState {
     }
 
     fn recalculate_visible(&mut self) {
+        // TODO: optimize
         let mut is_in_collapsed = false;
         let mut collapse_indent = 0;
         for item in self.items.iter_mut() {
@@ -259,7 +256,6 @@ impl AppState {
     }
 
     fn recalculate_selection_level(&mut self) {
-        // TODO: optimize
         if let Some(index) = self.selection_index() {
             // For non-containers, strip away the last component of the breadcrumbs
             let selection_breadcrumbs = match self.items[index].value {
@@ -273,8 +269,9 @@ impl AppState {
                 _ => self.items[index].breadcrumbs.clone(),
             };
             let mut selection_level: usize;
+            let bottom = self.bottom_index();
             // Loop through all items and calculate selection level
-            for item in self.visible_items.iter_mut() {
+            for item in self.visible_items[self.top_index..bottom].iter_mut() {
                 if item.breadcrumbs.starts_with(&selection_breadcrumbs) {
                     selection_level = 0;
                     // How many components of the breadcrumbs match?
