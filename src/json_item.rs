@@ -60,12 +60,12 @@ impl JsonItem {
                 output.push(Span::raw("   "));
             } else if Some(i) == self.selection_level {
                 output.push(Span::styled(
-                    "│   ",
-                    Style::default().fg(THEME.selection_indicator_color),
+                    "  │ ",
+                    Style::default().fg(THEME.selection_level_indicator_color),
                 ));
             } else {
                 output.push(Span::styled(
-                    "│   ",
+                    "  │ ",
                     Style::default().fg(THEME.indent_color),
                 ));
             }
@@ -78,15 +78,19 @@ impl JsonItem {
             format!("{:8} ", self.line_number),
             Style::default().fg(Color::DarkGray),
         );
-        let indents = self.indent_spans();
         let selection_str = if selection_index == Some(self.line_number) {
-            "> "
+            "➤ "
         } else {
-            ""
+            "  "
         };
+        let selection_span = Span::styled(
+            selection_str,
+            Style::default().fg(THEME.selection_indicator_color),
+        );
+        let indents = self.indent_spans();
 
         let name_str = match &self.name {
-            Some(name) => format!("{}{}: ", selection_str, name),
+            Some(name) => format!("{}: ", name),
             None => "".to_string(),
         };
         let name_span = Span::styled(
@@ -169,7 +173,7 @@ impl JsonItem {
                 vec![name_span, value_span]
             }
         };
-        Line::from([vec![line_number], indents, name_value].concat())
+        Line::from([vec![line_number], indents, vec![selection_span], name_value].concat())
     }
 
     pub fn update_is_search_result(&mut self, search_string: &str, is_searching: bool) {
