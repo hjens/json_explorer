@@ -177,12 +177,27 @@ impl AppState {
 
     pub fn toggle_collapsed(&mut self) {
         if let Some(index) = self.selection_index() {
-            match &self.items[index].value {
-                JsonValueType::Array | JsonValueType::Object => {
-                    self.items[index].collapsed = !self.items[index].collapsed;
-                    self.recalculate_visible();
+            {
+                let mut i = index;
+                loop {
+                    match &self.items[i].value {
+                        JsonValueType::Array | JsonValueType::Object => {
+                            self.items[i].collapsed = !self.items[i].collapsed;
+                            if let Some(selection) = self.list_state.selected() {
+                                let diff = index - i;
+                                self.select_index(selection - diff);
+                            }
+                            self.recalculate_visible();
+                            break;
+                        }
+                        _ => {
+                            if i == 0 {
+                                break;
+                            }
+                            i -= 1;
+                        }
+                    }
                 }
-                _ => {}
             }
         }
     }
