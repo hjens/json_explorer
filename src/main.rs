@@ -21,14 +21,12 @@ mod theme;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut args = std::env::args();
-    let json_text: String;
-    if args.len() == 2 {
-        let input_file: String = args.nth(1).unwrap();
-        json_text = fs::read_to_string(input_file).expect("Could not read from file");
-    } else {
+    if args.len() != 2 {
         println!("Usage: `jex [INPUT_FILE]`");
         exit(1);
     }
+    let input_file: String = args.nth(1).unwrap();
+    let json_text = fs::read_to_string(input_file).expect("Could not read from file");
     let json_values = parse_json::parse_json_string(&json_text).expect("Could not parse json.");
 
     let mut app_state = AppState::new(json_values, "".to_string());
