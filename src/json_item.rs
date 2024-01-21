@@ -56,9 +56,7 @@ impl JsonItem {
     fn indent_spans(&self) -> Vec<Span> {
         let mut output = vec![];
         for i in 0..self.indent {
-            if i < 1 {
-                output.push(Span::raw("   "));
-            } else if Some(i) == self.selection_level {
+            if Some(i) == self.selection_level {
                 output.push(Span::styled(
                     "  │ ",
                     Style::default().fg(THEME.selection_level_indicator_color),
