@@ -106,7 +106,13 @@ impl AppState {
         let new_index = match self.list_state.selected() {
             None => Some(0),
             Some(selection_index) => {
-                let indent = self.visible_items[selection_index].indent;
+                let indent = match self.visible_items[selection_index].value {
+                    JsonValueType::Array
+                    | JsonValueType::ArrayEnd
+                    | JsonValueType::Object
+                    | JsonValueType::ObjectEnd => self.visible_items[selection_index].indent,
+                    _ => self.visible_items[selection_index].indent - 1,
+                };
                 self.visible_items
                     .iter()
                     .enumerate()
@@ -136,7 +142,13 @@ impl AppState {
         let new_index = match self.list_state.selected() {
             None => Some(0),
             Some(selection_index) => {
-                let indent = self.visible_items[selection_index].indent;
+                let indent = match self.visible_items[selection_index].value {
+                    JsonValueType::Array
+                    | JsonValueType::ArrayEnd
+                    | JsonValueType::Object
+                    | JsonValueType::ObjectEnd => self.visible_items[selection_index].indent,
+                    _ => self.visible_items[selection_index].indent - 1,
+                };
                 self.visible_items
                     .iter()
                     .enumerate()
