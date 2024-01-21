@@ -362,6 +362,7 @@ impl AppState {
         self.update_search_results();
     }
     pub fn finish_searching(&mut self) {
+        self.update_search_results();
         self.search_state = match self.search_results().first() {
             Some(_) => BrowsingSearch(Some(0)),
             None => NotSearching,
@@ -378,8 +379,11 @@ impl AppState {
     }
 
     pub fn update_search(&mut self, event: &Event) {
+        let is_large_file = self.num_items_in_file > 1_000_000;
         self.search_input.handle_event(event);
-        self.update_search_results();
+        if !is_large_file {
+            self.update_search_results();
+        }
     }
 
     fn update_search_results(&mut self) {
