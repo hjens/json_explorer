@@ -25,7 +25,7 @@ pub const THEME: Theme = Theme {
     selection_indicator_color: Color::Magenta,
     selection_background_color: Color::DarkGray,
     indent_color: Color::DarkGray,
-    search_indicator_color: Color::LightYellow,
+    search_indicator_color: Color::LightMagenta,
     breadcrumbs_color: Color::Gray,
     status_text_color: Color::Gray,
 };
