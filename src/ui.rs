@@ -160,7 +160,11 @@ fn render(frame: &mut Frame, app_state: &mut AppState) {
         .iter()
         .map(|item| item.display_text(selection_index))
         .collect();
-    let list = Paragraph::new(list_items).block(Block::default().borders(Borders::TOP));
+    let list = Paragraph::new(list_items).block(
+        Block::default()
+            .title(app_state.filename.clone())
+            .borders(Borders::TOP),
+    );
 
     // Search
     let search = Paragraph::new(app_state.search_text().to_string().clone())
