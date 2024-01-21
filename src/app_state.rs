@@ -8,6 +8,7 @@ use tui_input::Input;
 
 use crate::app_state::SearchState::{BrowsingSearch, NotSearching, Searching};
 use crate::json_item::{JsonItem, JsonValueType};
+use thousands::Separable;
 
 #[derive(PartialEq)]
 pub enum SearchState {
@@ -78,7 +79,12 @@ impl AppState {
                 format!("Result {} of {}", index + 1, num_results)
             }
             _ => {
-                format!("{} values in file", self.num_items_in_file)
+                let f = self.selection_index().unwrap_or(0) as f32 / (self.items.len() - 1) as f32;
+                format!(
+                    " {} values in file | {:.0} %",
+                    self.num_items_in_file.separate_with_spaces(),
+                    f * 100.0
+                )
             }
         }
     }
