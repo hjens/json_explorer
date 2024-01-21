@@ -30,7 +30,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
                         app_state.update_search(&Event::Key(key));
                     }
                 },
-                SearchState::BrowsingSearch(_) => match key.code {
+                SearchState::NotSearching | SearchState::BrowsingSearch(_) => match key.code {
                     KeyCode::Char('n') => {
                         app_state.next_search_result();
                     }
@@ -40,13 +40,6 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
                     KeyCode::Esc => {
                         app_state.cancel_searching();
                     }
-                    KeyCode::Char('/') => {
-                        app_state.start_searching();
-                    }
-                    KeyCode::Char('q') => return Ok(()),
-                    _ => {}
-                },
-                SearchState::NotSearching => match key.code {
                     KeyCode::Char('q') => return Ok(()),
                     KeyCode::Char('j') => {
                         app_state.select_next(1);

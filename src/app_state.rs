@@ -359,7 +359,7 @@ impl AppState {
     }
 
     fn search_results(&self) -> Vec<usize> {
-        self.items
+        self.visible_items
             .iter()
             .enumerate()
             .filter(|(_index, item)| item.name_is_search_result || item.value_is_search_result)
@@ -373,7 +373,7 @@ impl AppState {
     }
 
     fn update_search_results(&mut self) {
-        for item in self.items.iter_mut() {
+        for item in self.visible_items.iter_mut() {
             item.update_is_search_result(
                 self.search_input.value(),
                 self.search_state != NotSearching,
