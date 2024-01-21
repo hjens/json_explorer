@@ -322,8 +322,8 @@ impl AppState {
 
     fn select_index(&mut self, index: usize) {
         self.list_state.select(Some(index));
-        self.recalculate_selection_level();
         self.recalculate_scroll_position();
+        self.recalculate_selection_level();
     }
 
     fn recalculate_scroll_position(&mut self) {
