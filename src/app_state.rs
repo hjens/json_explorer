@@ -89,10 +89,6 @@ impl AppState {
         }
     }
 
-    pub fn scroll_position(&self) -> usize {
-        self.list_state.selected().unwrap_or(0)
-    }
-
     pub fn breadbrumbs_text(&self) -> String {
         match self.selection_index() {
             Some(index) => self.items[index].breadcrumbs.clone(),

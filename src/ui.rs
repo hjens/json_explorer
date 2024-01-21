@@ -1,11 +1,7 @@
 use std::io;
 
 use crossterm::event::{self, Event, KeyCode};
-use ratatui::{
-    backend::Backend,
-    style::{Color, Modifier, Style},
-    widgets::Block,
-};
+use ratatui::{backend::Backend, style::Style, widgets::Block};
 use ratatui::{prelude::*, widgets::*};
 use ratatui::{Frame, Terminal};
 
