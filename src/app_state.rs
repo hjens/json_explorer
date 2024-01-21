@@ -347,6 +347,16 @@ impl AppState {
         self.update_search_results();
     }
 
+    pub fn start_searching_for_name(&mut self) {
+        if let Some(index) = self.selection_index() {
+            if let Some(name) = self.visible_items[index].name.clone() {
+                self.search_input = self.search_input.clone().with_value(name);
+                self.start_searching();
+                self.finish_searching();
+            }
+        }
+    }
+
     pub fn cancel_searching(&mut self) {
         self.search_state = NotSearching;
         self.update_search_results();

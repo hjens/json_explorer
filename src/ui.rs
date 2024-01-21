@@ -94,6 +94,9 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app_state: &mut AppState)
                     KeyCode::Char('/') => {
                         app_state.start_searching();
                     }
+                    KeyCode::Char('*') => {
+                        app_state.start_searching_for_name();
+                    }
                     _ => {}
                 },
             }
