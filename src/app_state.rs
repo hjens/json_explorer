@@ -202,6 +202,7 @@ impl AppState {
                                 self.select_index(selection - diff);
                             }
                             self.recalculate_visible();
+                            self.recalculate_selection_level();
                             break;
                         }
                         _ => {
