@@ -381,7 +381,7 @@ impl AppState {
     }
 
     pub fn update_search(&mut self, event: &Event) {
-        let is_large_file = self.num_items_in_file > 1_000_000;
+        let is_large_file = self.num_items_in_file > 1_00_000;
         self.search_input.handle_event(event);
         if !is_large_file {
             self.update_search_results();
