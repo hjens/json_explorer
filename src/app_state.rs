@@ -347,6 +347,7 @@ impl AppState {
     pub fn start_searching(&mut self) {
         self.uncollapse_all();
         self.search_state = Searching;
+        self.search_input = Input::new("".to_string());
         self.update_search_results();
     }
 
