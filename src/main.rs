@@ -17,6 +17,7 @@ mod ui;
 mod app_state;
 mod json_item;
 mod parse_json;
+mod search;
 mod theme;
 
 fn main() -> Result<(), Box<dyn Error>> {

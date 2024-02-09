@@ -20,6 +20,7 @@ pub struct JsonItem {
     pub name: Option<String>,
     pub indent: usize,
     pub value: JsonValueType,
+    pub value_str: String,
     pub line_number: usize,
     pub collapsed: bool,
     pub visible: bool,
@@ -38,10 +39,17 @@ impl JsonItem {
         breadcrumbs: String,
         len: usize,
     ) -> JsonItem {
+        let value_str = match &value {
+            JsonValueType::Number(n) => n.to_string(),
+            JsonValueType::String(s) => s.to_string(),
+            JsonValueType::Bool(b) => b.to_string(),
+            _ => "".to_string(),
+        };
         JsonItem {
             name,
             indent,
             value,
+            value_str,
             line_number: 0,
             collapsed: false,
             visible: true,
@@ -168,43 +176,5 @@ impl JsonItem {
             }
         };
         Line::from([vec![line_number], indents, vec![selection_span], name_value].concat())
-    }
-
-    pub fn update_is_search_result(&mut self, search_string: &str, is_searching: bool) {
-        let is_result = |s: Option<String>, p: Option<&str>| -> bool {
-            match (s, p) {
-                (Some(st), Some(pat)) => {
-                    st.to_lowercase().contains(&pat.to_lowercase()) && !pat.is_empty()
-                }
-                _ => false,
-            }
-        };
-        if search_string.is_empty() || !is_searching {
-            self.value_is_search_result = false;
-            self.name_is_search_result = false;
-        } else {
-            let mut search_components = search_string.split("=");
-            let name_search_str = search_components.next();
-            let value_search_str = search_components.next();
-            self.name_is_search_result = is_result(self.name.clone(), name_search_str);
-            let value_str = match &self.value {
-                JsonValueType::Number(n) => n.to_string(),
-                JsonValueType::String(s) => s.to_string(),
-                JsonValueType::Bool(b) => b.to_string(),
-                _ => "".to_string(),
-            };
-            self.value_is_search_result = is_result(Some(value_str), value_search_str);
-            if !value_search_str.unwrap_or("").is_empty()
-                && !value_search_str.unwrap_or("").is_empty()
-            {
-                match (self.name_is_search_result, self.value_is_search_result) {
-                    (false, true) | (true, false) => {
-                        self.value_is_search_result = false;
-                        self.name_is_search_result = false;
-                    }
-                    _ => {}
-                }
-            }
-        }
     }
 }

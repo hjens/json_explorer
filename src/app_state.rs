@@ -8,6 +8,7 @@ use tui_input::Input;
 
 use crate::app_state::SearchState::{BrowsingSearch, NotSearching, Searching};
 use crate::json_item::{JsonItem, JsonValueType};
+use crate::search::update_search_results;
 use thousands::Separable;
 
 #[derive(PartialEq)]
@@ -391,12 +392,7 @@ impl AppState {
     }
 
     fn update_search_results(&mut self) {
-        for item in self.visible_items.iter_mut() {
-            item.update_is_search_result(
-                self.search_input.value(),
-                self.search_state != NotSearching,
-            );
-        }
+        update_search_results(self.visible_items.iter_mut(), self.search_input.value());
         if self.search_state == Searching {
             let search_results = self.search_results();
             if !search_results.is_empty() {
