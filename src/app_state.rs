@@ -61,7 +61,7 @@ impl AppState {
             let top = self.top_index as i32;
             let height = self.list_height as i32;
             let num_visible_items = self.visible_items.len() as i32;
-            min(top + height - 1, num_visible_items) as usize
+            min(top + height, num_visible_items) as usize
         }
     }
 
@@ -185,8 +185,8 @@ impl AppState {
 
     pub fn select_bottom_of_screen(&mut self) {
         let top = self.top_index as u16;
-        let num_items = self.visible_items.len() as u16;
-        let index = min(top + num_items - 1, top + self.list_height - 2);
+        let num_items = self.display_items().len() as u16;
+        let index = min(top + num_items - 1, top + self.list_height - 1);
         self.select_index(index as usize);
     }
 
