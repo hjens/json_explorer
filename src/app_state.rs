@@ -225,7 +225,7 @@ impl AppState {
                     let indent = self.items[index].indent;
                     let line_number = self.items[index].line_number;
                     for item in self.items.iter_mut() {
-                        if item.indent == indent
+                        if item.indent >= indent
                             && (item.value == JsonValueType::Array
                                 || item.value == JsonValueType::Object)
                         {
