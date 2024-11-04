@@ -10,3 +10,4 @@ serde_json = {version="1.0.100", features = ["preserve_order"]}
 ratatui = "0.24.0"
 crossterm = "0.27.0"
 tui-input = "0.8.0"
+thousands = "0.2.0"
