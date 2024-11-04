@@ -249,8 +249,9 @@ impl AppState {
         let line_number = self.visible_items[self.list_state.selected().unwrap_or(0)].line_number;
         for item in self.items.iter_mut() {
             item.collapsed = false;
+            item.visible = true;
         }
-        self.recalculate_visible();
+        self.visible_items = self.items.clone();
         self.select_index(
             self.visible_items
                 .iter()
